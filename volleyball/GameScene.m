@@ -26,6 +26,7 @@
 @property (nonatomic, strong) NSString *gameScore;
 @property (nonatomic, strong) SKLabelNode *scoreLabelNode;
 @property (nonatomic, strong) GameAndScoreDetails *localGameStore;
+@property (nonatomic, assign) NSUInteger allowableHits;
 
 
 @end
@@ -52,6 +53,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     //    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
     self.ballDepthInSand = 10.0;
     self.gravityValue = -2.5;
+    self.allowableHits = 4;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
     [self setBackgroundColor:self.skyColor];
@@ -69,7 +71,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     NSLog(@"%1.f width %1.f height self.frame",self.frame.size.width,self.frame.size.height);
     NSLog(@"%1.f width %1.f height self.view",self.view.frame.size.width,self.view.frame.size.height);
     NSLog(@"%1.f width %1.f height view.bounds",view.bounds.size.width,view.bounds.size.height);
-    NSLog(@"%1.f width %1.f height [UIFrame mainScreen].bounds ",[UIScreen mainScreen].bounds.size.width,[UIScreen mainScreen].bounds.size.width);
     
 }
 
@@ -84,10 +85,17 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
     
-    self.scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:@"ArialMT"]; //http://iosfonts.com/
+    
+    // SCORE LABEL SETUP
+    self.scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:@"ChalkboardSE-Bold"]; //http://iosfonts.com/
     self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,self.frame.size.height - 50);
+    NSLog(@"%1.1f",self.frame.size.height - 55);
+    self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,120);
     self.scoreLabelNode.zPosition = 100;
-    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu  -  %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
+    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu      -      %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
+    self.scoreLabelNode.name = @"scoreLabelNode";
+    self.scoreLabelNode.fontColor = [SKColor blackColor];
+    self.scoreLabelNode.fontSize = 65;
     [self addChild:self.scoreLabelNode];
     
     
@@ -218,8 +226,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     UITouch *firstTouch = touches.anyObject;
     
-
-    
     if(!self.gameInPlay)
     {
         self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
@@ -233,12 +239,26 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGFloat ballCourtSide = self.volleyBall.position.x;
     BOOL shouldHitBall = 1;
     
-    if(self.hostValue ==0)
+    if(self.hostValue ==0)  // IF PLAYER ONE
     {
-        shouldHitBall = (self.frame.size.width/2 > ballCourtSide);
-    } else if (self.hostValue == 1)
+        bool correctSideOfCourt = (self.frame.size.width/2 >= ballCourtSide);  //IS THE BALL ON THE CORRECT SIDE OF THE COURT
+        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].leftPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+        shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
+    } else if (self.hostValue == 1)  //IF PLAYER 2
     {
-        shouldHitBall = (self.frame.size.width/2 > ballCourtSide);
+        bool correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
+        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+        shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
+    }
+    
+    if (self.frame.size.width/2 > ballCourtSide && shouldHitBall)
+    {
+        [self.localGameStore leftPlayerHitTheBall];
+        self.localGameStore.rightPlayerHits = 0;
+    } else if (self.frame.size.width/2 < ballCourtSide && shouldHitBall)
+    {
+        [self.localGameStore rightPlayerHitTheBall];
+        self.localGameStore.leftPlayerHits = 0;
     }
     
     if( (ABS(xDistance) < heightVolleyball*1.5) && (ABS(yDistance) < heightVolleyball*1.5) &&shouldHitBall )
@@ -255,7 +275,6 @@ static const uint32_t ceilingCategory = 1 << 5;
        
    }
     
-
 }
 
 
@@ -290,6 +309,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         if(self.gameInPlay)
         {
             [self flashBackgroundScreen:nil];
+            [[GameAndScoreDetails sharedGameDataStore] rightPlayerScored];
         }
         NSLog(@"Left side Hit");
         self.gameInPlay = NO;
@@ -299,6 +319,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         if(self.gameInPlay)
         {
             [self flashBackgroundScreen:nil];
+            [[GameAndScoreDetails sharedGameDataStore] leftPlayerScored];
         }
         NSLog(@"Right side Hit");
         self.gameInPlay = NO;
@@ -309,9 +330,8 @@ static const uint32_t ceilingCategory = 1 << 5;
             [self flashBackgroundScreen:[SKColor grayColor]];
         }
         NSLog(@"Net was hit");
-        
-        
     }
+    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu    -    %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
     
 }
 
