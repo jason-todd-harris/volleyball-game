@@ -38,7 +38,7 @@ static const uint32_t ceilingCategory = 1 << 4;
     self.physicsWorld.contactDelegate = self;
     
     self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
-    self.skyColor = [SKColor blackColor];
+//    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
     [self setBackgroundColor:self.skyColor];
     
     //the touch point
@@ -68,7 +68,6 @@ static const uint32_t ceilingCategory = 1 << 4;
     self.physicsBody.contactTestBitMask = fenceCategory | floorCategory; // notifications when collisions
     self.volleyBall.zPosition = 5.0;
     self.volleyBall.position = CGPointMake(self.size.width*1/6, self.size.height*4/5);
-    
     [self addChild:self.volleyBall];
     
     //ground set up
@@ -77,8 +76,8 @@ static const uint32_t ceilingCategory = 1 << 4;
     for(NSUInteger i = 0 ; i < 2 + self.frame.size.width/(groundTexture.size.width*2); i++)
     {
         SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:groundTexture];
-        [sprite setScale:2.0];
-        sprite.position = CGPointMake(i*sprite.size.width, sprite.size.height / 2 + groundTexture.size.height * 2);
+        [sprite setScale:2.0]; //CHECK THIS OUT
+        sprite.position = CGPointMake(i*sprite.size.width, sprite.size.height / 2 + groundTexture.size.height * 2); //CHECK THIS OUT
         [self addChild:sprite];
     }
     
@@ -93,19 +92,21 @@ static const uint32_t ceilingCategory = 1 << 4;
     //wall one set up
     self.wallNodeOne = [SKNode node];
     self.wallNodeOne.position = CGPointMake(0, 0);
-    self.wallNodeOne.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, [UIScreen mainScreen].bounds.size.height*10)];
+    self.wallNodeOne.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, self.frame.size.height*10)];
     self.wallNodeOne.physicsBody.categoryBitMask = worldCategory;
     self.wallNodeOne.physicsBody.dynamic = NO;
     [self addChild:self.wallNodeOne];
+    
     //wall two set up
     self.wallNodeTwo = [SKNode node];
     self.wallNodeTwo.position = CGPointMake(self.frame.size.width, 0);
-    self.wallNodeTwo.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, [UIScreen mainScreen].bounds.size.height*10)];
+    self.wallNodeTwo.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, self.frame.size.height*10)];
     self.wallNodeTwo.physicsBody.categoryBitMask = worldCategory;
     self.wallNodeTwo.physicsBody.dynamic = NO;
     [self addChild:self.wallNodeTwo];
-    //CEILING SET UP
     
+    
+    //CEILING SET UP
     SKNode *ceiling = [SKNode node];
     ceiling.position = CGPointMake(0, self.frame.size.height*2);
     ceiling.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width * 10, 1)];
@@ -115,10 +116,22 @@ static const uint32_t ceilingCategory = 1 << 4;
     [self addChild:ceiling];
     
     
-    //fence node
+    //fence texture - this is all BS, using an arbitrary texture and height is all fudged
+    SKTexture *fenceTexture = [SKTexture textureWithImageNamed:@"yellow+dot+med"];
+    fenceTexture.filteringMode = SKTextureFilteringNearest;
+    
+    for(NSUInteger i = 0 ; i < 2 + self.frame.size.height/(fenceTexture.size.height*2)-2; i++)
+    {
+        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:fenceTexture];
+        sprite.position = CGPointMake(self.frame.size.width / 2, (sprite.size.height)*i - 5);
+        [self addChild:sprite];
+    }
+    
+    
+    //fence node setup - this seems to be alright
     SKNode *fenceNode = [SKNode node];
-    fenceNode.position = CGPointMake(self.frame.size.width/2 , 0);
-    fenceNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(15, self.frame.size.height)];
+    fenceNode.position = CGPointMake(self.frame.size.width/2 , 0); // THIS WORKS
+    fenceNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(20, self.frame.size.height)]; // THIS DOESN'T
     fenceNode.physicsBody.categoryBitMask = fenceCategory;
     fenceNode.physicsBody.contactTestBitMask = ballCategory;
     fenceNode.physicsBody.dynamic = NO;
@@ -126,8 +139,10 @@ static const uint32_t ceilingCategory = 1 << 4;
     [self addChild:fenceNode];
     
     
-    NSLog(@"%f width %f height",self.frame.size.width,self.frame.size.height);
-    
+    NSLog(@"%1.f width %1.f height self.frame",self.frame.size.width,self.frame.size.height);
+    NSLog(@"%1.f width %1.f height self.view",self.view.frame.size.width,self.view.frame.size.height);
+    NSLog(@"%1.f width %1.f height view.bounds",view.bounds.size.width,view.bounds.size.height);
+    NSLog(@"%1.f width %1.f height [UIFrame mainScreen].bounds ",[UIScreen mainScreen].bounds.size.width,[UIScreen mainScreen].bounds.size.width);
     
 }
 
