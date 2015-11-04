@@ -15,6 +15,7 @@
 @property (nonatomic, assign) NSUInteger leftPlayerHits;
 @property (nonatomic, assign) NSUInteger rightPlayerHits;
 @property (nonatomic, assign) NSUInteger pointsPlayed;
+@property (nonatomic, assign) NSUInteger host;
 
 
 

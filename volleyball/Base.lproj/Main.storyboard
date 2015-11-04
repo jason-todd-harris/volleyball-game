@@ -3,12 +3,13 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9049"/>
+        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
-        <!--View Controller-->
+        <!--Initial View Controller-->
         <scene sceneID="Z7f-px-qx0">
             <objects>
-                <viewController id="Fy4-DY-A3j" sceneMemberID="viewController">
+                <viewController id="Fy4-DY-A3j" customClass="InitialViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="7k2-tD-VmD"/>
                         <viewControllerLayoutGuide type="bottom" id="aYG-uH-M5R"/>
@@ -17,8 +18,8 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" fixedFrame="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q47-wY-bvb">
-                                <rect key="frame" x="174" y="157" width="195" height="58"/>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q47-wY-bvb">
+                                <rect key="frame" x="20" y="163" width="195" height="58"/>
                                 <animations/>
                                 <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="39"/>
                                 <state key="normal" title="New Game"/>
@@ -26,10 +27,44 @@
                                     <segue destination="BV1-FR-VrT" kind="presentation" id="quN-fy-ziD"/>
                                 </connections>
                             </button>
+                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2wy-vF-c20">
+                                <rect key="frame" x="20" y="271" width="192" height="58"/>
+                                <animations/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="39"/>
+                                <state key="normal" title="Multiplayer"/>
+                                <connections>
+                                    <segue destination="Kfa-ck-eIc" kind="presentation" id="ufK-Zk-orR"/>
+                                </connections>
+                            </button>
+                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3qe-Dx-SgL">
+                                <rect key="frame" x="267" y="284" width="51" height="31"/>
+                                <animations/>
+                            </switch>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Select if host" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FjU-ke-rPQ">
+                                <rect key="frame" x="371" y="284" width="163" height="33"/>
+                                <animations/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="28"/>
+                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
+                                <nil key="highlightedColor"/>
+                            </label>
                         </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="2wy-vF-c20" firstAttribute="centerY" secondItem="PuO-Yg-WcP" secondAttribute="centerY" id="6OM-wY-h6W"/>
+                            <constraint firstItem="FjU-ke-rPQ" firstAttribute="centerY" secondItem="2wy-vF-c20" secondAttribute="centerY" id="9cK-lp-5PI"/>
+                            <constraint firstItem="3qe-Dx-SgL" firstAttribute="leading" secondItem="2wy-vF-c20" secondAttribute="trailing" constant="55" id="Atr-Jd-79U"/>
+                            <constraint firstItem="FjU-ke-rPQ" firstAttribute="leading" secondItem="3qe-Dx-SgL" secondAttribute="trailing" constant="55" id="Bc4-SS-aUT"/>
+                            <constraint firstItem="3qe-Dx-SgL" firstAttribute="centerY" secondItem="2wy-vF-c20" secondAttribute="centerY" id="E4d-Qd-bDg"/>
+                            <constraint firstAttribute="leadingMargin" secondItem="2wy-vF-c20" secondAttribute="leading" id="Kww-JW-sik"/>
+                            <constraint firstAttribute="leadingMargin" secondItem="q47-wY-bvb" secondAttribute="leading" id="g6e-fx-lnk"/>
+                            <constraint firstItem="2wy-vF-c20" firstAttribute="top" secondItem="q47-wY-bvb" secondAttribute="bottom" constant="50" id="kPA-jr-jkW"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="hostSwitch" destination="3qe-Dx-SgL" id="twp-uj-lXL"/>
+                        <outlet property="multiplayerClicked" destination="2wy-vF-c20" id="wPJ-Fb-mMw"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Vni-Ts-gIx" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -47,12 +82,31 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <animations/>
-                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="custom" customColorSpace="calibratedWhite"/>
+                        <color key="backgroundColor" white="0.33333333333333331" alpha="1" colorSpace="calibratedWhite"/>
                     </view>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="SZV-WD-TEh" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="501" y="328"/>
+            <point key="canvasLocation" x="459" y="328"/>
+        </scene>
+        <!--Multiplayer View Controller-->
+        <scene sceneID="MKq-1d-hjv">
+            <objects>
+                <viewController id="Kfa-ck-eIc" customClass="MultiplayerViewController" sceneMemberID="viewController">
+                    <layoutGuides>
+                        <viewControllerLayoutGuide type="top" id="Q6R-lP-jfR"/>
+                        <viewControllerLayoutGuide type="bottom" id="iV5-Is-WUa"/>
+                    </layoutGuides>
+                    <view key="view" multipleTouchEnabled="YES" contentMode="scaleToFill" id="oBY-z3-nJh" customClass="SKView">
+                        <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
+                        <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <animations/>
+                        <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                    </view>
+                </viewController>
+                <placeholder placeholderIdentifier="IBFirstResponder" id="FDW-Xd-Bmd" userLabel="First Responder" sceneMemberID="firstResponder"/>
+            </objects>
+            <point key="canvasLocation" x="182" y="1106"/>
         </scene>
     </scenes>
 </document>

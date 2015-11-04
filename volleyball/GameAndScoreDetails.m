@@ -32,9 +32,6 @@
 }
 
 
-
-
-
 -(instancetype)initWithLeftScore:(NSUInteger)leftScore
                       rightScore:(NSUInteger)rightScore
                   leftPlayerHits:(NSUInteger)leftPlayerHits
@@ -48,6 +45,7 @@
         _leftPlayerHits = 0;
         _rightPlayerHits = 0;
         _pointsPlayed = 0;
+        _host = 2;
     }
     return self;
 }
@@ -59,6 +57,7 @@
     self.leftPlayerHits = 0;
     self.rightPlayerHits = 0;
     self.pointsPlayed = 0;
+    self.host = 2;
 }
 
 

@@ -7,8 +7,9 @@
 //
 
 #import "GameScene.h"
+#import "GameAndScoreDetails.h"
 
-@interface GameScene () <SKPhysicsContactDelegate>
+@interface GameScene () <SKPhysicsContactDelegate, MultiplayerViewControllerDelegate>
 @property (nonatomic, strong) SKShapeNode *showsTouchPoint;
 @property (nonatomic, strong) SKSpriteNode *volleyBall;
 @property (nonatomic, strong) SKColor *skyColor;
@@ -19,6 +20,9 @@
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
 @property (nonatomic, assign) CGFloat ballDepthInSand;
 @property (nonatomic, assign) bool gameInPlay;
+@property (nonatomic, assign) BOOL isMultiplayer;
+@property (nonatomic, assign) NSUInteger hostValue;
+@property (nonatomic, assign) CGFloat gravityValue;
 
 
 @end
@@ -42,6 +46,13 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
     self.ballDepthInSand = 10.0;
+    self.gravityValue = -2.5;
+    self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
+    self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
+//    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
+    [self setBackgroundColor:self.skyColor];
+    self.multiPlayerVC.delegate = self;
+    
     
     
     [self setupSceneAndNodes];
@@ -64,9 +75,6 @@ static const uint32_t ceilingCategory = 1 << 5;
 -(void)setupSceneAndNodes
 {
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
-    self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
-    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
-    [self setBackgroundColor:self.skyColor];
     
     //the touch point
     self.showsTouchPoint = [[SKShapeNode alloc] init];
@@ -188,7 +196,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     UITouch *firstTouch = touches.anyObject;
     if(!self.gameInPlay)
     {
-        self.physicsWorld.gravity = CGVectorMake(0.0, -2.5);
+        self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
         self.gameInPlay = YES;
     }
     
@@ -210,6 +218,41 @@ static const uint32_t ceilingCategory = 1 << 5;
     });
 }
 
+-(void)dataWasReceived:(NSData *)data
+{
+    if(!self.gameInPlay)
+    {
+        self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
+        self.gameInPlay = YES;
+    }
+    NSDictionary *gameDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    NSString *stringVector = gameDictionary[@"vector"];
+    NSString *stringPoint = gameDictionary[@"point"];
+    CGVector hitVector = CGVectorFromString(stringVector);
+    CGPoint ballLocalation = CGPointFromString(stringPoint);
+    [self otherMultiplayerTap:hitVector location:ballLocalation];
+    
+}
+
+-(void)otherMultiplayerTap:(CGVector)vector location:(CGPoint)location
+{
+    self.volleyBall.position = location;
+    self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
+    [self.volleyBall.physicsBody applyImpulse:vector];
+    
+}
+
+
+-(void)sendDataToPlayer:(CGVector)hitVector location:(CGPoint)location
+{
+    NSString *stringVector = NSStringFromCGVector(hitVector);
+    NSString *stringPoint = NSStringFromCGPoint(location);
+    NSDictionary *gameDictionary = @{@"vector" : stringVector,
+                                     @"point" : stringPoint};
+    NSData *sendingData = [NSKeyedArchiver archivedDataWithRootObject:gameDictionary];
+    [self.partyTime sendData:sendingData withMode:(MCSessionSendDataReliable) error:nil];
+    
+}
 
 -(void)hitTheVolleyBall:(UITouch *)firstTouch
 {
@@ -225,7 +268,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     self.volleyBall.physicsBody.velocity = CGVectorMake(0,0); // ball mass is 0.26420798897743225
     [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)]; // bird mass 0.02010619267821312
-    
+    [self sendDataToPlayer:CGVectorMake(xBallVector,yBallVector) location:ballLocation];
 }
 
 -(void)didBeginContact:(SKPhysicsContact *)contact
