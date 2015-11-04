@@ -17,6 +17,7 @@
 		961927021BE924F6003A4E2A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 961927001BE924F6003A4E2A /* LaunchScreen.storyboard */; };
 		9619270D1BE924F6003A4E2A /* volleyballTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 9619270C1BE924F6003A4E2A /* volleyballTests.m */; };
 		961927181BE924F6003A4E2A /* volleyballUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 961927171BE924F6003A4E2A /* volleyballUITests.m */; };
+		967068B81BEA6D3B003277D3 /* GameAndScoreDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068B71BEA6D3B003277D3 /* GameAndScoreDetails.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -56,6 +57,8 @@
 		961927131BE924F6003A4E2A /* volleyballUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = volleyballUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		961927171BE924F6003A4E2A /* volleyballUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = volleyballUITests.m; sourceTree = "<group>"; };
 		961927191BE924F6003A4E2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		967068B61BEA6D3B003277D3 /* GameAndScoreDetails.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameAndScoreDetails.h; sourceTree = "<group>"; };
+		967068B71BEA6D3B003277D3 /* GameAndScoreDetails.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameAndScoreDetails.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +116,8 @@
 				961926F61BE924F6003A4E2A /* GameScene.sks */,
 				961926F81BE924F6003A4E2A /* GameViewController.h */,
 				961926F91BE924F6003A4E2A /* GameViewController.m */,
+				967068B61BEA6D3B003277D3 /* GameAndScoreDetails.h */,
+				967068B71BEA6D3B003277D3 /* GameAndScoreDetails.m */,
 				961926FB1BE924F6003A4E2A /* Main.storyboard */,
 				961926FE1BE924F6003A4E2A /* Assets.xcassets */,
 				961927001BE924F6003A4E2A /* LaunchScreen.storyboard */,
@@ -283,6 +288,7 @@
 				961926FA1BE924F6003A4E2A /* GameViewController.m in Sources */,
 				961926F21BE924F6003A4E2A /* AppDelegate.m in Sources */,
 				961926F51BE924F6003A4E2A /* GameScene.m in Sources */,
+				967068B81BEA6D3B003277D3 /* GameAndScoreDetails.m in Sources */,
 				961926EF1BE924F6003A4E2A /* main.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

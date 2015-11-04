@@ -12,9 +12,13 @@
 @property (nonatomic, strong) SKShapeNode *showsTouchPoint;
 @property (nonatomic, strong) SKSpriteNode *volleyBall;
 @property (nonatomic, strong) SKColor *skyColor;
-@property (nonatomic, strong) SKNode *groundNode;
+@property (nonatomic, strong) SKNode *groundNodeLeft;
+@property (nonatomic, strong) SKNode *groundNodeRight;
 @property (nonatomic, strong) SKNode *wallNodeOne;
 @property (nonatomic, strong) SKNode *wallNodeTwo;
+@property (nonatomic, assign) CGFloat screenSizeMultiplier;
+@property (nonatomic, assign) CGFloat ballDepthInSand;
+@property (nonatomic, assign) bool gameInPlay;
 
 
 @end
@@ -26,19 +30,42 @@
 static const uint32_t ballCategory = 1 << 0;
 static const uint32_t fenceCategory = 1 << 1;
 static const uint32_t worldCategory = 1 << 2;
-static const uint32_t floorCategory = 1 << 3;
-static const uint32_t ceilingCategory = 1 << 4;
+static const uint32_t floorCategoryLeft = 1 << 3;
+static const uint32_t floorCategoryRight = 1 << 4;
+static const uint32_t ceilingCategory = 1 << 5;
 // scene categories
 
 
 
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
-    self.physicsWorld.gravity = CGVectorMake(0.0, -2.5);
     self.physicsWorld.contactDelegate = self;
+    self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
+    self.ballDepthInSand = 10.0;
     
+    
+    [self setupSceneAndNodes];
+    
+    
+    NSLog(@"%1.f width %1.f height self.frame",self.frame.size.width,self.frame.size.height);
+    NSLog(@"%1.f width %1.f height self.view",self.view.frame.size.width,self.view.frame.size.height);
+    NSLog(@"%1.f width %1.f height view.bounds",view.bounds.size.width,view.bounds.size.height);
+    NSLog(@"%1.f width %1.f height [UIFrame mainScreen].bounds ",[UIScreen mainScreen].bounds.size.width,[UIScreen mainScreen].bounds.size.width);
+    
+}
+
+-(void)update:(CFTimeInterval)currentTime {
+    /* Called before each frame is rendered */
+    
+}
+
+
+
+-(void)setupSceneAndNodes
+{
+    self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
     self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
-//    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
+    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
     [self setBackgroundColor:self.skyColor];
     
     //the touch point
@@ -50,9 +77,7 @@ static const uint32_t ceilingCategory = 1 << 4;
     self.showsTouchPoint.fillColor = [SKColor darkGrayColor];
     self.showsTouchPoint.alpha = 0.5;
     self.showsTouchPoint.glowWidth = 0.0;
-    self.showsTouchPoint.zPosition = 10;
-    
-    
+    self.showsTouchPoint.zPosition = 15;
     
     
     // volleyball
@@ -61,33 +86,47 @@ static const uint32_t ceilingCategory = 1 << 4;
     
     self.volleyBall = [SKSpriteNode spriteNodeWithTexture:volleyballTexture];
     self.volleyBall.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.volleyBall.size.height/2];
-    self.physicsBody.allowsRotation = YES;
+    self.volleyBall.physicsBody.allowsRotation = YES;
     self.volleyBall.physicsBody.dynamic = YES;
-    self.physicsBody.categoryBitMask = ballCategory;
-    self.physicsBody.collisionBitMask = fenceCategory | worldCategory | ceilingCategory | floorCategory; // bounces off
-    self.physicsBody.contactTestBitMask = fenceCategory | floorCategory; // notifications when collisions
-    self.volleyBall.zPosition = 5.0;
-    self.volleyBall.position = CGPointMake(self.size.width*1/6, self.size.height*4/5);
+    self.volleyBall.physicsBody.accessibilityLabel = @"volleyBall";
+    self.volleyBall.physicsBody.categoryBitMask = ballCategory;
+    self.volleyBall.physicsBody.collisionBitMask = fenceCategory | worldCategory | ceilingCategory | floorCategoryLeft | floorCategoryRight; // bounces off
+    self.volleyBall.physicsBody.contactTestBitMask = fenceCategory | floorCategoryLeft; // notifications when collisions
+    self.volleyBall.zPosition = 10;
+    self.volleyBall.position = CGPointMake(self.size.width*1/6, self.size.height*3/5);
     [self addChild:self.volleyBall];
     
     //ground set up
     SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"Ground"];
-    groundTexture.filteringMode = SKTextureFilteringNearest;
+    //    groundTexture.filteringMode = SKTextureFilteringNearest;
+    CGFloat resultantHeight = 0;
     for(NSUInteger i = 0 ; i < 2 + self.frame.size.width/(groundTexture.size.width*2); i++)
     {
         SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:groundTexture];
         [sprite setScale:2.0]; //CHECK THIS OUT
-        sprite.position = CGPointMake(i*sprite.size.width, sprite.size.height / 2 + groundTexture.size.height * 2); //CHECK THIS OUT
+        sprite.position = CGPointMake(i*sprite.size.width, sprite.size.height / 2 + groundTexture.size.height * 2 - (self.screenSizeMultiplier* self.view.frame.size.height)); //CHECK THIS OUT
+        sprite.zPosition = 5;
+        resultantHeight = sprite.position.y;
         [self addChild:sprite];
     }
     
-    self.groundNode = [SKNode node];
-    self.groundNode.position = CGPointMake(0, groundTexture.size.height);
-    self.groundNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width*10, groundTexture.size.height*5)];
-    self.groundNode.physicsBody.categoryBitMask = floorCategory;
-    self.groundNode.physicsBody.contactTestBitMask = ballCategory;
-    self.groundNode.physicsBody.dynamic = NO;
-    [self addChild:self.groundNode];
+    //ground physics bodies set up
+    
+    self.groundNodeLeft = [SKNode node];
+    self.groundNodeLeft.position = CGPointMake(self.frame.size.width / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeLeft.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeLeft.physicsBody.categoryBitMask = floorCategoryLeft;
+    self.groundNodeLeft.physicsBody.contactTestBitMask = ballCategory;
+    self.groundNodeLeft.physicsBody.dynamic = NO;
+    [self addChild:self.groundNodeLeft];
+    
+    self.groundNodeRight = [SKNode node];
+    self.groundNodeRight.position = CGPointMake(self.frame.size.width * 3 / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeRight.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeRight.physicsBody.categoryBitMask = floorCategoryRight;
+    self.groundNodeRight.physicsBody.contactTestBitMask = ballCategory;
+    self.groundNodeRight.physicsBody.dynamic = NO;
+    [self addChild:self.groundNodeRight];
     
     //wall one set up
     self.wallNodeOne = [SKNode node];
@@ -123,40 +162,35 @@ static const uint32_t ceilingCategory = 1 << 4;
     for(NSUInteger i = 0 ; i < 2 + self.frame.size.height/(fenceTexture.size.height*2)-2; i++)
     {
         SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:fenceTexture];
-        sprite.position = CGPointMake(self.frame.size.width / 2, (sprite.size.height)*i - 5);
+        sprite.position = CGPointMake(self.frame.size.width / 2, (sprite.size.height)*i - 5); // subtraction places yellow balls closer together
         [self addChild:sprite];
     }
     
     
     //fence node setup - this seems to be alright
     SKNode *fenceNode = [SKNode node];
-    fenceNode.position = CGPointMake(self.frame.size.width/2 , 0); // THIS WORKS
-    fenceNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(20, self.frame.size.height)]; // THIS DOESN'T
+    fenceNode.position = CGPointMake(self.frame.size.width/2 , 0); // NODE POSITION
+    fenceNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(20, self.frame.size.height/2) center:(CGPointMake(0, self.frame.size.height/4))]; //where to center this IN THE NODE
     fenceNode.physicsBody.categoryBitMask = fenceCategory;
     fenceNode.physicsBody.contactTestBitMask = ballCategory;
     fenceNode.physicsBody.dynamic = NO;
     fenceNode.physicsBody.allowsRotation = NO;
     [self addChild:fenceNode];
     
-    
-    NSLog(@"%1.f width %1.f height self.frame",self.frame.size.width,self.frame.size.height);
-    NSLog(@"%1.f width %1.f height self.view",self.view.frame.size.width,self.view.frame.size.height);
-    NSLog(@"%1.f width %1.f height view.bounds",view.bounds.size.width,view.bounds.size.height);
-    NSLog(@"%1.f width %1.f height [UIFrame mainScreen].bounds ",[UIScreen mainScreen].bounds.size.width,[UIScreen mainScreen].bounds.size.width);
+    self.gameInPlay = NO;
     
 }
-
--(void)update:(CFTimeInterval)currentTime {
-    /* Called before each frame is rendered */
-    
-}
-
 
 #pragma mark - Touch and Hitting
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     /* Called when a touch begins */
     UITouch *firstTouch = touches.anyObject;
+    if(!self.gameInPlay)
+    {
+        self.physicsWorld.gravity = CGVectorMake(0.0, -2.5);
+        self.gameInPlay = YES;
+    }
     
     CGPoint ballTouch = [firstTouch locationInNode:self.volleyBall];
     CGFloat xDistance = ballTouch.x;
@@ -196,19 +230,63 @@ static const uint32_t ceilingCategory = 1 << 4;
 
 -(void)didBeginContact:(SKPhysicsContact *)contact
 {
-    NSLog(@"Floor or net hit");
     // Flash background if contact is detected
     
+    
+    bool leftSideFall = (contact.bodyA.categoryBitMask == floorCategoryLeft || contact.bodyB.categoryBitMask == floorCategoryLeft);
+    bool rightSideFall = (contact.bodyA.categoryBitMask == floorCategoryRight || contact.bodyB.categoryBitMask == floorCategoryRight);
+    bool netHit = (contact.bodyA.categoryBitMask == fenceCategory || contact.bodyB.categoryBitMask == fenceCategory);
+    
+    if (leftSideFall)
+    {
+        if(self.gameInPlay)
+        {
+            [self flashBackgroundScreen:nil];
+        }
+        NSLog(@"Left side Hit");
+        self.gameInPlay = NO;
+        
+    } else if (rightSideFall)
+    {
+        if(self.gameInPlay)
+        {
+            [self flashBackgroundScreen:nil];
+        }
+        NSLog(@"Right side Hit");
+        self.gameInPlay = NO;
+    } else if (netHit)
+    {
+        if(self.gameInPlay)
+        {
+            [self flashBackgroundScreen:[SKColor grayColor]];
+        }
+        NSLog(@"Net was hit");
+        
+        
+    }
+    
+}
+
+
+-(void)flashBackgroundScreen:(SKColor *)color
+{
+    __block NSUInteger count = 3;
     [self removeActionForKey:@"flash"];
     [self runAction:[SKAction sequence:@[[SKAction repeatAction:[SKAction sequence:@[[SKAction runBlock:^{
         self.backgroundColor = [SKColor redColor];
+        if (color)
+        {
+            self.backgroundColor = color;
+            count = 1;
+        }
     }], [SKAction waitForDuration:0.05], [SKAction runBlock:^{
         self.backgroundColor = _skyColor;
-    }], [SKAction waitForDuration:0.05]]] count:2], [SKAction runBlock:^{
-        // CAN RESTART GAME WOULD BE PUT HERE
+    }], [SKAction waitForDuration:0.05]]] count:count], [SKAction runBlock:^{
+        //AFTER ANIMATION IS COMPLETE
     }]]] withKey:@"flash"];
-    
 }
+
+
 
 #pragma mark - math helper
 
