@@ -23,6 +23,9 @@
 @property (nonatomic, assign) BOOL isMultiplayer;
 @property (nonatomic, assign) NSUInteger hostValue;
 @property (nonatomic, assign) CGFloat gravityValue;
+@property (nonatomic, strong) NSString *gameScore;
+@property (nonatomic, strong) SKLabelNode *scoreLabelNode;
+@property (nonatomic, strong) GameAndScoreDetails *localGameStore;
 
 
 @end
@@ -45,14 +48,19 @@ static const uint32_t ceilingCategory = 1 << 5;
     /* Setup your scene here */
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
+    self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
+    //    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
     self.ballDepthInSand = 10.0;
     self.gravityValue = -2.5;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
-    self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
-//    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
+    self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
     [self setBackgroundColor:self.skyColor];
-    self.multiPlayerVC.delegate = self;
+    self.isMultiplayer = (self.hostValue == 0 || self.hostValue == 1);
     
+    if (self.isMultiplayer)
+    {
+        self.multiPlayerVC.delegate = self;
+    }
     
     
     [self setupSceneAndNodes];
@@ -76,6 +84,13 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
     
+    self.scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:@"ArialMT"]; //http://iosfonts.com/
+    self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,self.frame.size.height - 50);
+    self.scoreLabelNode.zPosition = 100;
+    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu  -  %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
+    [self addChild:self.scoreLabelNode];
+    
+    
     //the touch point
     self.showsTouchPoint = [[SKShapeNode alloc] init];
     CGMutablePathRef ballPath = CGPathCreateMutable();
@@ -86,7 +101,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.showsTouchPoint.alpha = 0.5;
     self.showsTouchPoint.glowWidth = 0.0;
     self.showsTouchPoint.zPosition = 15;
-    
     
     // volleyball
     SKTexture *volleyballTexture = [SKTexture textureWithImageNamed:@"Volleyball"];
@@ -103,38 +117,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.volleyBall.zPosition = 10;
     self.volleyBall.position = CGPointMake(self.size.width*1/6, self.size.height*3/5);
     [self addChild:self.volleyBall];
-    
-    //ground set up
-    SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"Ground"];
-    //    groundTexture.filteringMode = SKTextureFilteringNearest;
-    CGFloat resultantHeight = 0;
-    for(NSUInteger i = 0 ; i < 2 + self.frame.size.width/(groundTexture.size.width*2); i++)
-    {
-        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:groundTexture];
-        [sprite setScale:2.0]; //CHECK THIS OUT
-        sprite.position = CGPointMake(i*sprite.size.width, sprite.size.height / 2 + groundTexture.size.height * 2 - (self.screenSizeMultiplier* self.view.frame.size.height)); //CHECK THIS OUT
-        sprite.zPosition = 5;
-        resultantHeight = sprite.position.y;
-        [self addChild:sprite];
-    }
-    
-    //ground physics bodies set up
-    
-    self.groundNodeLeft = [SKNode node];
-    self.groundNodeLeft.position = CGPointMake(self.frame.size.width / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
-    self.groundNodeLeft.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
-    self.groundNodeLeft.physicsBody.categoryBitMask = floorCategoryLeft;
-    self.groundNodeLeft.physicsBody.contactTestBitMask = ballCategory;
-    self.groundNodeLeft.physicsBody.dynamic = NO;
-    [self addChild:self.groundNodeLeft];
-    
-    self.groundNodeRight = [SKNode node];
-    self.groundNodeRight.position = CGPointMake(self.frame.size.width * 3 / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
-    self.groundNodeRight.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
-    self.groundNodeRight.physicsBody.categoryBitMask = floorCategoryRight;
-    self.groundNodeRight.physicsBody.contactTestBitMask = ballCategory;
-    self.groundNodeRight.physicsBody.dynamic = NO;
-    [self addChild:self.groundNodeRight];
     
     //wall one set up
     self.wallNodeOne = [SKNode node];
@@ -174,7 +156,6 @@ static const uint32_t ceilingCategory = 1 << 5;
         [self addChild:sprite];
     }
     
-    
     //fence node setup - this seems to be alright
     SKNode *fenceNode = [SKNode node];
     fenceNode.position = CGPointMake(self.frame.size.width/2 , 0); // NODE POSITION
@@ -185,15 +166,60 @@ static const uint32_t ceilingCategory = 1 << 5;
     fenceNode.physicsBody.allowsRotation = NO;
     [self addChild:fenceNode];
     
+    //SET UP GROUND METHOD
+    [self setUpGround];
+    
     self.gameInPlay = NO;
     
+}
+
+#pragma mark - set up ground stuff
+
+-(void)setUpGround
+{
+    //ground set up
+    SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"Ground"];
+    //    groundTexture.filteringMode = SKTextureFilteringNearest;
+    CGFloat resultantHeight = 0;
+    for(NSUInteger i = 0 ; i < 2 + self.frame.size.width/(groundTexture.size.width*2); i++)
+    {
+        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:groundTexture];
+        [sprite setScale:2.0]; //CHECK THIS OUT
+        sprite.position = CGPointMake(i*sprite.size.width, sprite.size.height / 2 + groundTexture.size.height * 2 - (self.screenSizeMultiplier* self.view.frame.size.height)); //CHECK THIS OUT
+        sprite.zPosition = 5;
+        resultantHeight = sprite.position.y;
+        [self addChild:sprite];
+    }
+    
+    //ground physics bodies set up
+    
+    self.groundNodeLeft = [SKNode node];
+    self.groundNodeLeft.position = CGPointMake(self.frame.size.width / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeLeft.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeLeft.physicsBody.categoryBitMask = floorCategoryLeft;
+    self.groundNodeLeft.physicsBody.contactTestBitMask = ballCategory;
+    self.groundNodeLeft.physicsBody.dynamic = NO;
+    [self addChild:self.groundNodeLeft];
+    
+    self.groundNodeRight = [SKNode node];
+    self.groundNodeRight.position = CGPointMake(self.frame.size.width * 3 / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeRight.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeRight.physicsBody.categoryBitMask = floorCategoryRight;
+    self.groundNodeRight.physicsBody.contactTestBitMask = ballCategory;
+    self.groundNodeRight.physicsBody.dynamic = NO;
+    [self addChild:self.groundNodeRight];
+
 }
 
 #pragma mark - Touch and Hitting
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
     /* Called when a touch begins */
+    
     UITouch *firstTouch = touches.anyObject;
+    
+
+    
     if(!self.gameInPlay)
     {
         self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
@@ -204,55 +230,34 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGFloat xDistance = ballTouch.x;
     CGFloat yDistance = ballTouch.y;
     CGFloat heightVolleyball = self.volleyBall.size.height;
-    if( (ABS(xDistance) < heightVolleyball*1.5) && (ABS(yDistance) < heightVolleyball*1.5) )
-       {
-        [self hitTheVolleyBall:firstTouch];
-       }
+    CGFloat ballCourtSide = self.volleyBall.position.x;
+    BOOL shouldHitBall = 1;
     
-    CGPoint touchLocation = [firstTouch locationInNode:self];
-    [self removeChildrenInArray:@[self.showsTouchPoint]];
-    self.showsTouchPoint.position = touchLocation;
-    [self addChild:self.showsTouchPoint];
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        [self removeChildrenInArray:@[self.showsTouchPoint]];
-    });
-}
-
--(void)dataWasReceived:(NSData *)data
-{
-    if(!self.gameInPlay)
+    if(self.hostValue ==0)
     {
-        self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
-        self.gameInPlay = YES;
+        shouldHitBall = (self.frame.size.width/2 > ballCourtSide);
+    } else if (self.hostValue == 1)
+    {
+        shouldHitBall = (self.frame.size.width/2 > ballCourtSide);
     }
-    NSDictionary *gameDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
-    NSString *stringVector = gameDictionary[@"vector"];
-    NSString *stringPoint = gameDictionary[@"point"];
-    CGVector hitVector = CGVectorFromString(stringVector);
-    CGPoint ballLocalation = CGPointFromString(stringPoint);
-    [self otherMultiplayerTap:hitVector location:ballLocalation];
     
+    if( (ABS(xDistance) < heightVolleyball*1.5) && (ABS(yDistance) < heightVolleyball*1.5) &&shouldHitBall )
+   {
+       [self hitTheVolleyBall:firstTouch];
+       //SHOWS WHERE TOUCH HAPPENED
+       CGPoint touchLocation = [firstTouch locationInNode:self];
+       [self removeChildrenInArray:@[self.showsTouchPoint]];
+       self.showsTouchPoint.position = touchLocation;
+       [self addChild:self.showsTouchPoint];
+       dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+           [self removeChildrenInArray:@[self.showsTouchPoint]];
+       });
+       
+   }
+    
+
 }
 
--(void)otherMultiplayerTap:(CGVector)vector location:(CGPoint)location
-{
-    self.volleyBall.position = location;
-    self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
-    [self.volleyBall.physicsBody applyImpulse:vector];
-    
-}
-
-
--(void)sendDataToPlayer:(CGVector)hitVector location:(CGPoint)location
-{
-    NSString *stringVector = NSStringFromCGVector(hitVector);
-    NSString *stringPoint = NSStringFromCGPoint(location);
-    NSDictionary *gameDictionary = @{@"vector" : stringVector,
-                                     @"point" : stringPoint};
-    NSData *sendingData = [NSKeyedArchiver archivedDataWithRootObject:gameDictionary];
-    [self.partyTime sendData:sendingData withMode:(MCSessionSendDataReliable) error:nil];
-    
-}
 
 -(void)hitTheVolleyBall:(UITouch *)firstTouch
 {
@@ -329,6 +334,46 @@ static const uint32_t ceilingCategory = 1 << 5;
     }]]] withKey:@"flash"];
 }
 
+
+#pragma mark - multiplayer handling
+
+-(void)dataWasReceived:(NSData *)data
+{
+    if(!self.gameInPlay)
+    {
+        self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
+        self.gameInPlay = YES;
+    }
+    NSDictionary *gameDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
+    NSString *stringVector = gameDictionary[@"vector"];
+    NSString *stringPoint = gameDictionary[@"point"];
+    CGVector hitVector = CGVectorFromString(stringVector);
+    CGPoint ballLocalation = CGPointFromString(stringPoint);
+    [self otherMultiplayerTap:hitVector location:ballLocalation];
+    
+}
+
+-(void)otherMultiplayerTap:(CGVector)vector location:(CGPoint)location
+{
+    self.volleyBall.position = location;
+    self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
+    [self.volleyBall.physicsBody applyImpulse:vector];
+    
+}
+
+
+-(void)sendDataToPlayer:(CGVector)hitVector location:(CGPoint)location
+{
+    if (self.hostValue)
+    {
+        NSString *stringVector = NSStringFromCGVector(hitVector);
+        NSString *stringPoint = NSStringFromCGPoint(location);
+        NSDictionary *gameDictionary = @{@"vector" : stringVector,
+                                         @"point" : stringPoint};
+        NSData *sendingData = [NSKeyedArchiver archivedDataWithRootObject:gameDictionary];
+        [self.partyTime sendData:sendingData withMode:(MCSessionSendDataReliable) error:nil];
+    }
+}
 
 
 #pragma mark - math helper

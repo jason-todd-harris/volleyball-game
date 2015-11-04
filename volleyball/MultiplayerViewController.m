@@ -50,39 +50,43 @@
    didReceiveData:(NSData *)data
          fromPeer:(MCPeerID *)peerID
 {
-    NSLog(@"received data %@",data);
+    NSLog(@"received data !!!");
     [self.delegate dataWasReceived:data];
     
-    
 }
-
-//-(void)dataWasReceived:(NSData *)data
-//{
-//    
-//}
-
--(void)partyTime:(PLPartyTime *)partyTime failedToJoinParty:(NSError *)error
-{
-    
-    
-}
-
 
 -(void)partyTime:(PLPartyTime *)partyTime
             peer:(MCPeerID *)peer
     changedState:(MCSessionState)state
     currentPeers:(NSArray *)currentPeers
 {
-        NSLog(@"changed state %ld",(long)state);
+    NSLog(@"changed state %ld",(long)state);
     if(state == 2)
     {
         [self loadTheGame];
-        
+    } else if (state == 0)
+    {
+        [self dismissViewControllerAnimated:YES completion:^{
+            UIAlertController *disconnectAlert = [UIAlertController alertControllerWithTitle:@"Game Over"
+                                                                                     message:@"Opponent disconnected"
+                                                                              preferredStyle:UIAlertControllerStyleAlert];
+            UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault
+                                                                  handler:^(UIAlertAction * action) {}];
+            
+            [disconnectAlert addAction:defaultAction];
+            [self presentViewController:disconnectAlert animated:YES completion:nil];
+        }];
     }
     
 }
 
 
+-(void)partyTime:(PLPartyTime *)partyTime
+failedToJoinParty:(NSError *)error
+{
+    
+    
+}
 
 
 -(void)loadTheGame
@@ -92,7 +96,7 @@
     SKView * skView = (SKView *)self.view;
     skView.showsFPS = YES;
     skView.showsNodeCount = YES;
-    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
+//    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
     /* Sprite Kit applies additional optimizations to improve rendering performance */
     skView.ignoresSiblingOrder = YES;
     
@@ -101,7 +105,6 @@
     scene.scaleMode = SKSceneScaleModeAspectFill;
     scene.partyTime = self.partyTime;
     scene.multiPlayerVC = self;
-    //MultiplayerViewController *multiplayerViewController
     
     // Present the scene.
     [skView presentScene:scene];
