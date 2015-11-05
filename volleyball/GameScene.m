@@ -384,7 +384,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)sendDataToPlayer:(CGVector)hitVector location:(CGPoint)location
 {
-    if (self.hostValue)
+    if (self.hostValue != 2)
     {
         NSString *stringVector = NSStringFromCGVector(hitVector);
         NSString *stringPoint = NSStringFromCGPoint(location);
