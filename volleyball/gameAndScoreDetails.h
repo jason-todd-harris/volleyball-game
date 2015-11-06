@@ -10,12 +10,25 @@
 
 @interface GameAndScoreDetails : NSObject
 
-@property (nonatomic, assign) NSUInteger leftPlayerScore;
-@property (nonatomic, assign) NSUInteger rightPlayerScore;
+typedef NS_ENUM (NSUInteger, ballServer) {
+    LeftPlayerServe = 1,
+    RightPlayerServe = 2
+} NS_ENUM_AVAILABLE (10_10, 7_0);
+
+
+@property (nonatomic, readonly) NSUInteger leftPlayerScore;
+@property (nonatomic, readonly) NSUInteger rightPlayerScore;
 @property (nonatomic, assign) NSUInteger leftPlayerHits;
 @property (nonatomic, assign) NSUInteger rightPlayerHits;
 @property (nonatomic, assign) NSUInteger pointsPlayed;
 @property (nonatomic, assign) NSUInteger host;
+@property (nonatomic, assign) NSUInteger server;
+@property (nonatomic, readonly) ballServer theBallServer;
+
+
+// constants for who has the serve
+
+
 
 
 

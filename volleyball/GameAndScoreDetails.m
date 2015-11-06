@@ -8,6 +8,16 @@
 
 #import "GameAndScoreDetails.h"
 
+
+
+@interface GameAndScoreDetails ()
+
+@property (nonatomic, assign) NSUInteger leftPlayerScore;
+@property (nonatomic, assign) NSUInteger rightPlayerScore;
+@property (nonatomic, assign) ballServer theBallServer;
+
+@end
+
 @implementation GameAndScoreDetails
 
 
@@ -46,6 +56,7 @@
         _rightPlayerHits = 0;
         _pointsPlayed = 0;
         _host = 2;
+        _theBallServer = LeftPlayerServe;
     }
     return self;
 }
@@ -57,6 +68,7 @@
     self.leftPlayerHits = 0;
     self.rightPlayerHits = 0;
     self.pointsPlayed = 0;
+    self.theBallServer = LeftPlayerServe;
     self.host = 2;
 }
 
@@ -78,12 +90,14 @@
 -(NSUInteger)leftPlayerScored
 {
     self.leftPlayerScore ++;
+    self.theBallServer = LeftPlayerServe;
     return self.leftPlayerScore;
 }
 
 -(NSUInteger)rightPlayerScored
 {
     self.rightPlayerScore ++;
+    self.theBallServer = RightPlayerServe;
     return self.rightPlayerScore;
 }
 
