@@ -11,8 +11,8 @@
 @interface GameAndScoreDetails : NSObject
 
 typedef NS_ENUM (NSUInteger, ballServer) {
-    LeftPlayerServe = 1,
-    RightPlayerServe = 2
+    LeftPlayerServe = 0,
+    RightPlayerServe = 1
 } NS_ENUM_AVAILABLE (10_10, 7_0);
 
 

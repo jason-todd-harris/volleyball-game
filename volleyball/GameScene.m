@@ -27,6 +27,7 @@
 @property (nonatomic, assign) bool lastTapper;
 @property (nonatomic, assign) bool gameStopped;
 @property (nonatomic, assign) bool readyToRestart;
+//@property (nonatomic, assign) bool allowReceivingData;
 
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
 @property (nonatomic, assign) NSUInteger hostValue;
@@ -64,6 +65,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.ballDepthInSand = 10.0;
     self.gravityValue = -2.5;
     self.allowableHits = 4;
+//    self.allowReceivingData = YES;
     self.lastTapper = NO;
     self.frameCounter = 0;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
@@ -105,8 +107,8 @@ static const uint32_t ceilingCategory = 1 << 5;
 -(void)setupSceneAndNodes
 {
     [self removeAllChildren];
-    self.readyToRestart = NO;
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
+    self.readyToRestart = NO;
     self.gameStopped = NO;
     
     // SCORE LABEL SETUP
@@ -224,7 +226,11 @@ static const uint32_t ceilingCategory = 1 << 5;
         self.restartButton.fontColor = [SKColor blackColor];
         self.restartButton.fontSize = 80;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            self.readyToRestart = YES;
+            if(self.hostValue == self.localGameStore.theBallServer)
+            {
+                self.readyToRestart = YES;
+            }
+            
         });
         [self addChild:self.restartButton];
     });
@@ -292,9 +298,11 @@ static const uint32_t ceilingCategory = 1 << 5;
     if(self.gameStopped && self.readyToRestart)
     {
         [self setupSceneAndNodes];
+        [self sendDataToPlayer:CGVectorMake(0, 0) location:self.volleyBall.position updateOrTap:@"restartGame" dataSendMode:MCSessionSendDataReliable];
     }
     
 }
+
 
 -(bool)shouldBallBeHit:(UITouch *)firstTouch
 {
@@ -327,7 +335,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     if (closeToTheBall && shouldHitBall)
     {
-        if(!self.gameInPlay)
+        if(!self.gameInPlay && !self.readyToRestart)
         {
             self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
             self.gameInPlay = YES;
@@ -366,10 +374,10 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.lastTapper = YES;
 }
 
+#pragma mark - contact made
+
 -(void)didBeginContact:(SKPhysicsContact *)contact
 {
-    // Flash background if contact is detected
-    
     
     bool leftSideFall = (contact.bodyA.categoryBitMask == floorCategoryLeft || contact.bodyB.categoryBitMask == floorCategoryLeft);
     bool rightSideFall = (contact.bodyA.categoryBitMask == floorCategoryRight || contact.bodyB.categoryBitMask == floorCategoryRight);
@@ -432,11 +440,9 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)dataWasReceived:(NSData *)data
 {
-    
     if(!self.gameInPlay)
     {
         self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
-        self.gameInPlay = YES;
     }
     NSDictionary *gameDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
     NSString *stringVector = gameDictionary[@"vector"];
@@ -445,13 +451,16 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGVector hitVector = CGVectorFromString(stringVector);
     CGPoint ballLocalation = CGPointFromString(stringPoint);
     
-    if (self.lastTapper == NO)
+    if (self.lastTapper == NO && ![updateOrTap isEqualToString:@"restartGame"])
     {
         [self otherMultiplayerTap:hitVector location:ballLocalation updateOrTap:updateOrTap];
     } else if ([updateOrTap isEqualToString:@"tap"])
     {
         [self otherMultiplayerTap:hitVector location:ballLocalation updateOrTap:updateOrTap];
         self.lastTapper = NO;
+    } else if ([updateOrTap isEqualToString:@"restartGame"])
+    {
+        [self setupSceneAndNodes];
     }
     
 }
@@ -481,7 +490,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         dataSendMode = MCSessionSendDataReliable;
     }
     
-    if (self.hostValue != 2)
+    if (self.hostValue != 2 && self.gameInPlay)
     {
         NSString *stringVector = NSStringFromCGVector(hitVector);
         NSString *stringPoint = NSStringFromCGPoint(location);
@@ -492,6 +501,19 @@ static const uint32_t ceilingCategory = 1 << 5;
         [self.partyTime sendData:sendingData withMode:(dataSendMode) error:nil];
     }
 }
+
+//-(void)temporarilyTurnOffDataReceiving:(NSUInteger)xSeconds
+//{
+//    if(!xSeconds)
+//    {
+//        xSeconds = 0.1;
+//    }
+//    self.allowReceivingData = NO;
+//    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(xSeconds * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+//        self.allowReceivingData = YES;
+//    });
+//    
+//}
 
 
 #pragma mark - math helper
