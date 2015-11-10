@@ -22,11 +22,11 @@
 @property (nonatomic, strong) SKLabelNode *restartButton;
 
 //TRACKING VALUES
-@property (nonatomic, assign) bool gameInPlay;
+@property (nonatomic, assign) bool gameInPlay; //GAME IN PLAY
 @property (nonatomic, assign) bool isMultiplayer;
 @property (nonatomic, assign) bool lastTapper;
-@property (nonatomic, assign) bool gameStopped;
-@property (nonatomic, assign) bool readyToRestart;
+@property (nonatomic, assign) bool gameStopped; //GAME STOPPED
+@property (nonatomic, assign) bool readyToRestart; //READY TO RESTART
 //@property (nonatomic, assign) bool allowReceivingData;
 
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
@@ -61,7 +61,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
     self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
-    //    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
+//    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
     self.ballDepthInSand = 10.0;
     self.gravityValue = -2.5;
     self.allowableHits = 4;
@@ -113,14 +113,13 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     // SCORE LABEL SETUP
     self.scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:@"ChalkboardSE-Bold"]; //http://iosfonts.com/
-    self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,self.frame.size.height - 50);
-    NSLog(@"%1.1f",self.frame.size.height - 55);
+    self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,self.frame.size.height - 65);
     self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,120);
     self.scoreLabelNode.zPosition = 100;
-    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu      -      %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
     self.scoreLabelNode.name = @"scoreLabelNode";
     self.scoreLabelNode.fontColor = [SKColor blackColor];
     self.scoreLabelNode.fontSize = 65;
+    [self updateScoreLabelNode];
     [self addChild:self.scoreLabelNode];
     
     
@@ -226,7 +225,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         self.restartButton.fontColor = [SKColor blackColor];
         self.restartButton.fontSize = 80;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            if(self.hostValue == self.localGameStore.theBallServer)
+            if((self.hostValue == self.localGameStore.theBallServer) || self.hostValue == 2)
             {
                 self.readyToRestart = YES;
             }
@@ -234,6 +233,13 @@ static const uint32_t ceilingCategory = 1 << 5;
         });
         [self addChild:self.restartButton];
     });
+}
+
+-(void)updateScoreLabelNode
+{
+    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu     -     %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
+    
+    
 }
 
 
@@ -412,7 +418,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         }
         NSLog(@"Net was hit");
     }
-    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu    -    %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
+    [self updateScoreLabelNode];
     
 }
 
@@ -428,9 +434,9 @@ static const uint32_t ceilingCategory = 1 << 5;
             self.backgroundColor = color;
             count = 1;
         }
-    }], [SKAction waitForDuration:0.05], [SKAction runBlock:^{
+    }], [SKAction waitForDuration:0.1], [SKAction runBlock:^{
         self.backgroundColor = _skyColor;
-    }], [SKAction waitForDuration:0.33]]] count:count], [SKAction runBlock:^{
+    }], [SKAction waitForDuration:0.1]]] count:count], [SKAction runBlock:^{
         //UPON COMPLETION
     }]]] withKey:@"flash"];
 }
@@ -490,7 +496,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         dataSendMode = MCSessionSendDataReliable;
     }
     
-    if (self.hostValue != 2 && self.gameInPlay)
+    if (self.hostValue != 2) // && !self.gameInPlay)
     {
         NSString *stringVector = NSStringFromCGVector(hitVector);
         NSString *stringPoint = NSStringFromCGPoint(location);

@@ -11,8 +11,8 @@
 #import "gameAndScoreDetails.h"
 
 @interface InitialViewController ()
-@property (weak, nonatomic) IBOutlet UISwitch *hostSwitch;
 @property (weak, nonatomic) IBOutlet UIButton *multiplayerClicked;
+@property (weak, nonatomic) IBOutlet UISegmentedControl *hostSwitch;
 
 @end
 
@@ -44,7 +44,7 @@
     if ([sender isEqual:self.multiplayerClicked])
     {
 //        MultiplayerViewController *vc = [segue destinationViewController];
-        [GameAndScoreDetails sharedGameDataStore].host = self.hostSwitch.on;
+        [GameAndScoreDetails sharedGameDataStore].host = self.hostSwitch.selectedSegmentIndex;
     }
 
     

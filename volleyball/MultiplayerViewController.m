@@ -9,6 +9,14 @@
 #import "MultiplayerViewController.h"
 #import "gameAndScoreDetails.h"
 #import "GameScene.h"
+#import <GameKit/GameKit.h>
+
+@interface MultiplayerViewController ()
+@property (weak, nonatomic) IBOutlet UILabel *connectingLabel;
+@property (nonatomic, assign) NSUInteger firstConnection;
+
+
+@end
 
 @implementation SKScene (Unarchive)
 
@@ -35,13 +43,15 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    self.firstConnection = 0;
+    self.connectingLabel.text = [NSString stringWithFormat:@"Looking for Player %@",[GameAndScoreDetails sharedGameDataStore].host ? @"1":@"2"];
+    
     self.partyTime = [[PLPartyTime alloc] initWithServiceType:@"test"];   //@"volleyBallGame"];
     self.partyTime.delegate = self;
     [self.partyTime startAPaty];
     [self.partyTime joinParty];
     
     
-
 }
 
 
@@ -61,8 +71,9 @@
     currentPeers:(NSArray *)currentPeers
 {
     NSLog(@"changed state %ld",(long)state);
-    if(state == 2)
+    if(state == 2 && !self.firstConnection)
     {
+        self.firstConnection = 1;
         [self loadTheGame];
     } else if (state == 0)
     {
@@ -91,7 +102,6 @@ failedToJoinParty:(NSError *)error
 
 -(void)loadTheGame
 {
-    
     // Configure the view.
     SKView * skView = (SKView *)self.view;
 //    skView.showsFPS = YES;
@@ -105,6 +115,7 @@ failedToJoinParty:(NSError *)error
     scene.scaleMode = SKSceneScaleModeAspectFill;
     scene.partyTime = self.partyTime;
     scene.multiPlayerVC = self;
+    [self.connectingLabel removeFromSuperview];
     
     // Present the scene.
     [skView presentScene:scene];

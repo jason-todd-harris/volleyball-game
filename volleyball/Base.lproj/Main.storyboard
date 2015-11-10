@@ -36,33 +36,28 @@
                                     <segue destination="Kfa-ck-eIc" kind="presentation" id="ufK-Zk-orR"/>
                                 </connections>
                             </button>
-                            <switch opaque="NO" contentMode="scaleToFill" horizontalHuggingPriority="750" verticalHuggingPriority="750" contentHorizontalAlignment="center" contentVerticalAlignment="center" on="YES" translatesAutoresizingMaskIntoConstraints="NO" id="3qe-Dx-SgL">
-                                <rect key="frame" x="267" y="284" width="51" height="31"/>
+                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Vgh-Bl-CyF">
+                                <rect key="frame" x="287" y="286" width="127" height="29"/>
                                 <animations/>
-                            </switch>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" misplaced="YES" text="Player 1 or 2" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="FjU-ke-rPQ">
-                                <rect key="frame" x="376" y="284" width="158" height="33"/>
-                                <animations/>
-                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="28"/>
-                                <color key="textColor" cocoaTouchSystemColor="darkTextColor"/>
-                                <nil key="highlightedColor"/>
-                            </label>
+                                <segments>
+                                    <segment title="Player 1"/>
+                                    <segment title="Player 2"/>
+                                </segments>
+                            </segmentedControl>
                         </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
                         <constraints>
                             <constraint firstItem="2wy-vF-c20" firstAttribute="centerY" secondItem="PuO-Yg-WcP" secondAttribute="centerY" id="6OM-wY-h6W"/>
-                            <constraint firstItem="FjU-ke-rPQ" firstAttribute="centerY" secondItem="2wy-vF-c20" secondAttribute="centerY" id="9cK-lp-5PI"/>
-                            <constraint firstItem="3qe-Dx-SgL" firstAttribute="leading" secondItem="2wy-vF-c20" secondAttribute="trailing" constant="55" id="Atr-Jd-79U"/>
-                            <constraint firstItem="FjU-ke-rPQ" firstAttribute="leading" secondItem="3qe-Dx-SgL" secondAttribute="trailing" constant="55" id="Bc4-SS-aUT"/>
-                            <constraint firstItem="3qe-Dx-SgL" firstAttribute="centerY" secondItem="2wy-vF-c20" secondAttribute="centerY" id="E4d-Qd-bDg"/>
+                            <constraint firstItem="Vgh-Bl-CyF" firstAttribute="leading" secondItem="2wy-vF-c20" secondAttribute="trailing" constant="75" id="Ey6-ej-fa4"/>
                             <constraint firstAttribute="leadingMargin" secondItem="2wy-vF-c20" secondAttribute="leading" id="Kww-JW-sik"/>
                             <constraint firstAttribute="leadingMargin" secondItem="q47-wY-bvb" secondAttribute="leading" id="g6e-fx-lnk"/>
                             <constraint firstItem="2wy-vF-c20" firstAttribute="top" secondItem="q47-wY-bvb" secondAttribute="bottom" constant="50" id="kPA-jr-jkW"/>
+                            <constraint firstItem="Vgh-Bl-CyF" firstAttribute="centerY" secondItem="2wy-vF-c20" secondAttribute="centerY" id="p6c-dr-Szd"/>
                         </constraints>
                     </view>
                     <connections>
-                        <outlet property="hostSwitch" destination="3qe-Dx-SgL" id="twp-uj-lXL"/>
+                        <outlet property="hostSwitch" destination="Vgh-Bl-CyF" id="R9e-va-37o"/>
                         <outlet property="multiplayerClicked" destination="2wy-vF-c20" id="wPJ-Fb-mMw"/>
                     </connections>
                 </viewController>
@@ -100,9 +95,25 @@
                     <view key="view" multipleTouchEnabled="YES" contentMode="scaleToFill" id="oBY-z3-nJh" customClass="SKView">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
+                        <subviews>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="CONNECTING..." textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="7DV-Zl-yo0">
+                                <rect key="frame" x="185" y="282" width="230" height="37"/>
+                                <animations/>
+                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="31"/>
+                                <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="custom" customColorSpace="calibratedRGB"/>
+                                <nil key="highlightedColor"/>
+                            </label>
+                        </subviews>
                         <animations/>
                         <color key="backgroundColor" white="0.0" alpha="1" colorSpace="calibratedWhite"/>
+                        <constraints>
+                            <constraint firstItem="7DV-Zl-yo0" firstAttribute="centerX" secondItem="oBY-z3-nJh" secondAttribute="centerX" id="KYM-7X-I2M"/>
+                            <constraint firstItem="7DV-Zl-yo0" firstAttribute="centerY" secondItem="oBY-z3-nJh" secondAttribute="centerY" id="n50-uh-65k"/>
+                        </constraints>
                     </view>
+                    <connections>
+                        <outlet property="connectingLabel" destination="7DV-Zl-yo0" id="CMh-Ek-lfE"/>
+                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="FDW-Xd-Bmd" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
