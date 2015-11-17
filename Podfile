@@ -4,7 +4,7 @@
 # use_frameworks!
 
 target 'volleyball' do
-pod partytime
+pod 'Masonry'
 end
 
 target 'volleyballTests' do

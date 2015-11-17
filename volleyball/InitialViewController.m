@@ -13,6 +13,8 @@
 @interface InitialViewController ()
 @property (weak, nonatomic) IBOutlet UIButton *multiplayerClicked;
 @property (weak, nonatomic) IBOutlet UISegmentedControl *hostSwitch;
+@property (nonatomic, assign) CGFloat screenWidth;
+@property (nonatomic, assign) CGFloat screenHeight;
 
 @end
 
@@ -20,8 +22,24 @@
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    [self setScreenHeightandWidth];
     // Do any additional setup after loading the view.
+    UIImage *backgroundSlice = [UIImage imageNamed:@"background-slice_small_ocean&sand"];
+    CGFloat sizeRatio = backgroundSlice.size.height / self.screenHeight;
+    backgroundSlice = [UIImage imageWithCGImage:backgroundSlice.CGImage scale:sizeRatio orientation:backgroundSlice.imageOrientation];
+    self.view.backgroundColor = [UIColor colorWithPatternImage:backgroundSlice];
+    
+    
 }
+
+-(void)setScreenHeightandWidth
+{
+    CGSize screenSize = [UIScreen mainScreen].bounds.size;
+    self.screenWidth = MAX(screenSize.width, screenSize.height);
+    self.screenHeight = MIN(screenSize.width, screenSize.height);
+}
+
+
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];

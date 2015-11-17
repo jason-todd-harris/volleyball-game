@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		5CB1B1A7993AA59F83181B8C /* libPods-volleyball.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 0701C2251121310519A4341A /* libPods-volleyball.a */; };
 		961926EF1BE924F6003A4E2A /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = 961926EE1BE924F6003A4E2A /* main.m */; };
 		961926F21BE924F6003A4E2A /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 961926F11BE924F6003A4E2A /* AppDelegate.m */; };
 		961926F51BE924F6003A4E2A /* GameScene.m in Sources */ = {isa = PBXBuildFile; fileRef = 961926F41BE924F6003A4E2A /* GameScene.m */; };
@@ -44,6 +45,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		0701C2251121310519A4341A /* libPods-volleyball.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libPods-volleyball.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		961926EA1BE924F6003A4E2A /* volleyball.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = volleyball.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		961926EE1BE924F6003A4E2A /* main.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = main.m; sourceTree = "<group>"; };
 		961926F01BE924F6003A4E2A /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
@@ -75,6 +77,8 @@
 		967068C01BEA7E18003277D3 /* PLPartyTime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PLPartyTime.m; sourceTree = "<group>"; };
 		96E7A3DB1BF26DF600B7482B /* TestClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestClass.h; sourceTree = "<group>"; };
 		96E7A3DC1BF26DF700B7482B /* TestClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestClass.m; sourceTree = "<group>"; };
+		AA6D1F5E922E5CDB9B2CC3A1 /* Pods-volleyball.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-volleyball.debug.xcconfig"; path = "Pods/Target Support Files/Pods-volleyball/Pods-volleyball.debug.xcconfig"; sourceTree = "<group>"; };
+		CD3E312E20BEBF79247D2C97 /* Pods-volleyball.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-volleyball.release.xcconfig"; path = "Pods/Target Support Files/Pods-volleyball/Pods-volleyball.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -82,6 +86,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5CB1B1A7993AA59F83181B8C /* libPods-volleyball.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -102,6 +107,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		296988CD1EA70A2E67D27128 /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				0701C2251121310519A4341A /* libPods-volleyball.a */,
+			);
+			name = Frameworks;
+			sourceTree = "<group>";
+		};
 		961926E11BE924F6003A4E2A = {
 			isa = PBXGroup;
 			children = (
@@ -109,6 +122,8 @@
 				9619270B1BE924F6003A4E2A /* volleyballTests */,
 				961927161BE924F6003A4E2A /* volleyballUITests */,
 				961926EB1BE924F6003A4E2A /* Products */,
+				A84BF90FA14C08A19FB9EC54 /* Pods */,
+				296988CD1EA70A2E67D27128 /* Frameworks */,
 			);
 			sourceTree = "<group>";
 		};
@@ -179,6 +194,15 @@
 			path = volleyballUITests;
 			sourceTree = "<group>";
 		};
+		A84BF90FA14C08A19FB9EC54 /* Pods */ = {
+			isa = PBXGroup;
+			children = (
+				AA6D1F5E922E5CDB9B2CC3A1 /* Pods-volleyball.debug.xcconfig */,
+				CD3E312E20BEBF79247D2C97 /* Pods-volleyball.release.xcconfig */,
+			);
+			name = Pods;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
@@ -186,9 +210,12 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 9619271C1BE924F6003A4E2A /* Build configuration list for PBXNativeTarget "volleyball" */;
 			buildPhases = (
+				2965FABAD1F29D4C1DCB7A34 /* Check Pods Manifest.lock */,
 				961926E61BE924F6003A4E2A /* Sources */,
 				961926E71BE924F6003A4E2A /* Frameworks */,
 				961926E81BE924F6003A4E2A /* Resources */,
+				1CD770EA8754DC4AFB47EC3E /* Embed Pods Frameworks */,
+				86DBC31175C324733BF0DD8C /* Copy Pods Resources */,
 			);
 			buildRules = (
 			);
@@ -307,6 +334,54 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		1CD770EA8754DC4AFB47EC3E /* Embed Pods Frameworks */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Embed Pods Frameworks";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-volleyball/Pods-volleyball-frameworks.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+		2965FABAD1F29D4C1DCB7A34 /* Check Pods Manifest.lock */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Check Pods Manifest.lock";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "diff \"${PODS_ROOT}/../Podfile.lock\" \"${PODS_ROOT}/Manifest.lock\" > /dev/null\nif [[ $? != 0 ]] ; then\n    cat << EOM\nerror: The sandbox is not in sync with the Podfile.lock. Run 'pod install' or update your CocoaPods installation.\nEOM\n    exit 1\nfi\n";
+			showEnvVarsInLog = 0;
+		};
+		86DBC31175C324733BF0DD8C /* Copy Pods Resources */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			name = "Copy Pods Resources";
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"${SRCROOT}/Pods/Target Support Files/Pods-volleyball/Pods-volleyball-resources.sh\"\n";
+			showEnvVarsInLog = 0;
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		961926E61BE924F6003A4E2A /* Sources */ = {
@@ -460,6 +535,7 @@
 		};
 		9619271D1BE924F6003A4E2A /* Debug */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = AA6D1F5E922E5CDB9B2CC3A1 /* Pods-volleyball.debug.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
@@ -474,6 +550,7 @@
 		};
 		9619271E1BE924F6003A4E2A /* Release */ = {
 			isa = XCBuildConfiguration;
+			baseConfigurationReference = CD3E312E20BEBF79247D2C97 /* Pods-volleyball.release.xcconfig */;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				CODE_SIGN_IDENTITY = "iPhone Developer";

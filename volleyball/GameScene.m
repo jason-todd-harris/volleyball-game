@@ -65,7 +65,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.gameFontName = @"SpinCycleOT";
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
-    self.ballDepthInSand = self.screenHeight / 35;
+    self.ballDepthInSand = self.screenHeight / 100;
     self.gravityValue = -2.5;
     self.allowableHits = 4;
     self.lastTapper = NO;
@@ -125,7 +125,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     //the touch point
     self.showsTouchPoint = [[SKShapeNode alloc] init];
     CGMutablePathRef ballPath = CGPathCreateMutable();
-    CGPathAddArc(ballPath, NULL, 0,0, 15, 0, M_PI*2, YES);
+    CGPathAddArc(ballPath, NULL, 0,0, self.screenHeight / 30, 0, M_PI*2, YES);
     self.showsTouchPoint.path = ballPath;
     self.showsTouchPoint.lineWidth = 1.0;
     self.showsTouchPoint.fillColor = [SKColor darkGrayColor];
@@ -148,7 +148,8 @@ static const uint32_t ceilingCategory = 1 << 5;
     //SET UP FENCE / NET
     [self setUpFenceNodes];
     
-    
+    //SET UP PLAYER NAME LABELS
+    [self setUpPlayerNames];
     
     
     self.gameInPlay = NO;
@@ -158,13 +159,15 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 #pragma mark - set up scene nodes
 
+
+
 -(void)setUpVolleyBall
 {
     // volleyball
     SKTexture *volleyballTexture = [SKTexture textureWithImageNamed:@"Volleyball"];
     volleyballTexture.filteringMode = SKTextureFilteringNearest;
     self.volleyBall = [SKSpriteNode spriteNodeWithTexture:volleyballTexture];
-    CGFloat volleyballScaleRatio = 1.0 / 6 * self.screenHeight / self.volleyBall.size.height; // volleyball size to screen size ratio
+    CGFloat volleyballScaleRatio = 1.0 / 7 * self.screenHeight / self.volleyBall.size.height; // volleyball size to screen size ratio
     [self.volleyBall setScale:volleyballScaleRatio];
     self.volleyBall.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.volleyBall.size.height/2];
     self.volleyBall.physicsBody.allowsRotation = YES;
@@ -291,12 +294,40 @@ static const uint32_t ceilingCategory = 1 << 5;
     
 }
 
+-(void)setUpPlayerNames
+{
+    CGFloat playerLabelFontSize = self.screenHeight / 10;
+    CGFloat playerLabelHeight = self.screenHeight - self.screenHeight / 10;
+    CGFloat playerLabelIndentation = self.screenWidth / 7;
+    CGFloat playerLabelAlpha = 0.33;
+    
+    SKLabelNode *playerOneLabel = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
+    playerOneLabel.zPosition = 1;
+    playerOneLabel.text = @"PLAYER 1";
+    playerOneLabel.fontColor = [SKColor whiteColor];
+    playerOneLabel.fontSize = playerLabelFontSize;
+    playerOneLabel.alpha = playerLabelAlpha;
+    playerOneLabel.position = CGPointMake(playerLabelIndentation, playerLabelHeight);
+    [self addChild:playerOneLabel];
+    
+    SKLabelNode *playerTwoLabel = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
+    playerTwoLabel.zPosition = 1;
+    playerTwoLabel.text = @"PLAYER 2";
+    playerTwoLabel.fontColor = [SKColor whiteColor];
+    playerTwoLabel.fontSize = playerLabelFontSize;
+    playerTwoLabel.alpha = playerLabelAlpha;
+    playerTwoLabel.position = CGPointMake(self.screenWidth -  playerLabelIndentation, playerLabelHeight);
+    [self addChild:playerTwoLabel];
+    
+}
+
+
 
 -(void)placeRestartGameButton
 {
     self.gameStopped = YES;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self.restartButton = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
+        self.restartButton = [SKLabelNode labelNodeWithFontNamed:@"SpinCycleOT"];
         self.restartButton.position = CGPointMake(self.frame.size.width/2,self.frame.size.height * 2.75 / 4);
         self.restartButton.zPosition = 100;
         self.restartButton.text = [NSString stringWithFormat:@"TAP TO RESET SERVE"];
