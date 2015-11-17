@@ -88,7 +88,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     NSLog(@"%1.f width %1.f height self.frame",self.frame.size.width,self.frame.size.height);
     NSLog(@"%1.f width %1.f height self.view",self.view.frame.size.width,self.view.frame.size.height);
     NSLog(@"%1.f width %1.f height view.bounds",view.bounds.size.width,view.bounds.size.height);
-    
+    NSLog(@"%1.f width %1.f height self.height",self.size.width,self.size.height);
 }
 
 -(void)update:(CFTimeInterval)currentTime {
@@ -144,55 +144,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.showsTouchPoint.glowWidth = 0.0;
     self.showsTouchPoint.zPosition = 15;
     
-    // volleyball
-    SKTexture *volleyballTexture = [SKTexture textureWithImageNamed:@"Volleyball"];
-    volleyballTexture.filteringMode = SKTextureFilteringNearest;
-    
-    self.volleyBall = [SKSpriteNode spriteNodeWithTexture:volleyballTexture];
-    self.volleyBall.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.volleyBall.size.height/2];
-    self.volleyBall.physicsBody.allowsRotation = YES;
-    self.volleyBall.physicsBody.dynamic = YES;
-    self.volleyBall.physicsBody.accessibilityLabel = @"volleyBall";
-    self.volleyBall.physicsBody.categoryBitMask = ballCategory;
-    self.volleyBall.physicsBody.collisionBitMask = fenceCategory | worldCategory | ceilingCategory | floorCategoryLeft | floorCategoryRight; // bounces off
-    self.volleyBall.physicsBody.contactTestBitMask = fenceCategory | floorCategoryLeft; // notifications when collisions
-    self.volleyBall.zPosition = 10;
-    
-    if ([GameAndScoreDetails sharedGameDataStore].theBallServer == LeftPlayerServe)
-    {
-       self.volleyBall.position = CGPointMake(self.size.width*1/6, self.size.height*3/5);
-    } else {
-       self.volleyBall.position = CGPointMake(self.size.width*5/6, self.size.height*3/5);
-    }
-    
-    
-    [self addChild:self.volleyBall];
-    
-    //wall one set up
-    self.wallNodeOne = [SKNode node];
-    self.wallNodeOne.position = CGPointMake(0, 0);
-    self.wallNodeOne.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, self.frame.size.height*10)];
-    self.wallNodeOne.physicsBody.categoryBitMask = worldCategory;
-    self.wallNodeOne.physicsBody.dynamic = NO;
-    [self addChild:self.wallNodeOne];
-    
-    //wall two set up
-    self.wallNodeTwo = [SKNode node];
-    self.wallNodeTwo.position = CGPointMake(self.frame.size.width, 0);
-    self.wallNodeTwo.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, self.frame.size.height*10)];
-    self.wallNodeTwo.physicsBody.categoryBitMask = worldCategory;
-    self.wallNodeTwo.physicsBody.dynamic = NO;
-    [self addChild:self.wallNodeTwo];
-    
-    
-    //CEILING SET UP
-    SKNode *ceiling = [SKNode node];
-    ceiling.position = CGPointMake(0, self.frame.size.height*2);
-    ceiling.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width * 10, 1)];
-    ceiling.physicsBody.categoryBitMask = ceilingCategory;
-    ceiling.physicsBody.dynamic = NO;
-    ceiling.physicsBody.allowsRotation = NO;
-    [self addChild:ceiling];
+    [self setUpVolleyBall];
     
     
     //fence texture - this is all BS, using an arbitrary texture and height is all fudged
@@ -215,6 +167,9 @@ static const uint32_t ceilingCategory = 1 << 5;
     fenceNode.physicsBody.dynamic = NO;
     fenceNode.physicsBody.allowsRotation = NO;
     [self addChild:fenceNode];
+    
+    //SET UP COURT
+    [self setUpTheCourtBounds];
     
     //SET UP GROUND METHOD
     [self setUpGround];
@@ -245,17 +200,114 @@ static const uint32_t ceilingCategory = 1 << 5;
     });
 }
 
+
+
+#pragma mark - set up scene nodes
+
 -(void)updateScoreLabelNode
 {
     self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu     -     %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
+    
+}
+-(void)setUpTheCourtBounds
+{
+    //wall one set up
+    self.wallNodeOne = [SKNode node];
+    self.wallNodeOne.position = CGPointMake(0, 0);
+    self.wallNodeOne.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, self.frame.size.height*10)];
+    self.wallNodeOne.physicsBody.categoryBitMask = worldCategory;
+    self.wallNodeOne.physicsBody.dynamic = NO;
+    [self addChild:self.wallNodeOne];
+    
+    //wall two set up
+    self.wallNodeTwo = [SKNode node];
+    self.wallNodeTwo.position = CGPointMake(self.frame.size.width, 0);
+    self.wallNodeTwo.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(1, self.frame.size.height*10)];
+    self.wallNodeTwo.physicsBody.categoryBitMask = worldCategory;
+    self.wallNodeTwo.physicsBody.dynamic = NO;
+    [self addChild:self.wallNodeTwo];
+    
+    
+    //CEILING SET UP
+    SKNode *ceiling = [SKNode node];
+    ceiling.position = CGPointMake(0, self.frame.size.height*2);
+    ceiling.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width * 10, 1)];
+    ceiling.physicsBody.categoryBitMask = ceilingCategory;
+    ceiling.physicsBody.dynamic = NO;
+    ceiling.physicsBody.allowsRotation = NO;
+    [self addChild:ceiling];
     
     
 }
 
 
-#pragma mark - set up ground stuff
+-(void)setUpVolleyBall
+{
+    // volleyball
+    SKTexture *volleyballTexture = [SKTexture textureWithImageNamed:@"Volleyball"];
+    volleyballTexture.filteringMode = SKTextureFilteringNearest;
+    self.volleyBall = [SKSpriteNode spriteNodeWithTexture:volleyballTexture];
+    CGFloat volleyballScaleRatio = 1.0 / 6 * self.screenHeight / self.volleyBall.size.height; // volleyball size to screen size ratio
+    [self.volleyBall setScale:volleyballScaleRatio];
+    self.volleyBall.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.volleyBall.size.height/2];
+    self.volleyBall.physicsBody.allowsRotation = YES;
+    self.volleyBall.physicsBody.mass = 0.25;
+    self.volleyBall.physicsBody.dynamic = YES;
+    self.volleyBall.physicsBody.accessibilityLabel = @"volleyBall";
+    self.volleyBall.physicsBody.categoryBitMask = ballCategory;
+    self.volleyBall.physicsBody.collisionBitMask = fenceCategory | worldCategory | ceilingCategory | floorCategoryLeft | floorCategoryRight; // bounces off
+    self.volleyBall.physicsBody.contactTestBitMask = fenceCategory | floorCategoryLeft; // notifications when collisions
+    self.volleyBall.zPosition = 10;
+    if ([GameAndScoreDetails sharedGameDataStore].theBallServer == LeftPlayerServe)
+    {
+        self.volleyBall.position = CGPointMake(self.screenWidth*1/6, self.screenHeight*3/5);
+    } else {
+        self.volleyBall.position = CGPointMake(self.screenWidth*5/6, self.screenHeight*3/5);
+    }
+    [self addChild:self.volleyBall];
+}
+
 
 -(void)setUpGround
+{
+    //ground set up
+    SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"background-slice_converted"];
+    //    groundTexture.filteringMode = SKTextureFilteringNearest;
+    CGFloat heightRatio = self.size.height / groundTexture.size.height;
+    CGFloat resultantHeight = 0;
+    for(NSUInteger i = 0 ; i < 2 + self.screenWidth / groundTexture.size.width / heightRatio; i++)
+    {
+        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:groundTexture];
+        [sprite setScale:heightRatio];
+//        NSLog(@"%1.1f bg height",sprite.size.height);
+//        NSLog(@"%1.1f bg width",sprite.size.width);
+        sprite.position = CGPointMake(i*sprite.size.width , self.screenHeight / 2.0);
+        sprite.zPosition = 5;
+        resultantHeight = sprite.position.y;
+        [self addChild:sprite];
+    }
+    
+    //ground physics bodies set up
+    
+    self.groundNodeLeft = [SKNode node];
+    self.groundNodeLeft.position = CGPointMake(self.frame.size.width / 4, self.screenHeight * 194.0 / 750 / 2.0 - self.ballDepthInSand); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeLeft.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.screenWidth / 2, self.screenHeight * 194.0 / 750)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeLeft.physicsBody.categoryBitMask = floorCategoryLeft;
+    self.groundNodeLeft.physicsBody.contactTestBitMask = ballCategory;
+    self.groundNodeLeft.physicsBody.dynamic = NO;
+    [self addChild:self.groundNodeLeft];
+    
+    self.groundNodeRight = [SKNode node];
+    self.groundNodeRight.position = CGPointMake(self.frame.size.width * 3 / 4, self.screenHeight * 194.0 / 750 / 2.0 - self.ballDepthInSand); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeRight.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.screenWidth / 2, self.screenHeight * 194.0 / 750 )]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeRight.physicsBody.categoryBitMask = floorCategoryRight;
+    self.groundNodeRight.physicsBody.contactTestBitMask = ballCategory;
+    self.groundNodeRight.physicsBody.dynamic = NO;
+    [self addChild:self.groundNodeRight];
+
+}
+
+-(void)oldGroundSetup
 {
     //ground set up
     SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"Ground"];
@@ -288,7 +340,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.groundNodeRight.physicsBody.contactTestBitMask = ballCategory;
     self.groundNodeRight.physicsBody.dynamic = NO;
     [self addChild:self.groundNodeRight];
-
 }
 
 #pragma mark - Touch and Hitting
@@ -376,7 +427,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     CGPoint ballLocation = self.volleyBall.position;
     CGPoint touchLocation = [firstTouch locationInNode:self];
-    CGFloat forceHit = 100;
+    CGFloat forceHit = 90;
     
     CGPoint pointForRatio = pointSubtract(touchLocation, ballLocation);
     CGFloat xBallVector = forceHit * (pointForRatio.x / -ABS(pointForRatio.y));
