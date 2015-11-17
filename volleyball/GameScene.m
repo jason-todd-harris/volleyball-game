@@ -31,6 +31,7 @@
 
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
 @property (nonatomic, assign) CGFloat screenHeight;
+@property (nonatomic, strong) NSString *gameFontName;
 @property (nonatomic, assign) CGFloat screenWidth;
 @property (nonatomic, assign) NSUInteger hostValue;
 @property (nonatomic, strong) NSString *gameScore;
@@ -61,20 +62,19 @@ static const uint32_t ceilingCategory = 1 << 5;
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
     [self setScreenHeightandWidth];
+    self.gameFontName = @"SpinCycleOT";
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
-    self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
-//    self.skyColor = [SKColor blackColor]; //black color for troubleshooting
-    self.ballDepthInSand = 10.0;
+    self.ballDepthInSand = self.screenHeight / 35;
     self.gravityValue = -2.5;
     self.allowableHits = 4;
-//    self.allowReceivingData = YES;
     self.lastTapper = NO;
     self.frameCounter = 0;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
-    [self setBackgroundColor:self.skyColor];
     self.isMultiplayer = (self.hostValue == 0 || self.hostValue == 1);
+    //    self.allowReceivingData = YES;
+    
     
     if (self.isMultiplayer)
     {
@@ -91,6 +91,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     NSLog(@"%1.f width %1.f height self.height",self.size.width,self.size.height);
 }
 
+
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
     
@@ -103,7 +104,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     self.frameCounter ++;
 }
-
 
 
 -(void)setScreenHeightandWidth
@@ -121,17 +121,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.readyToRestart = NO;
     self.gameStopped = NO;
     
-    // SCORE LABEL SETUP
-    self.scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:@"ChalkboardSE-Bold"]; //http://iosfonts.com/
-    self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,self.frame.size.height - 65);
-    self.scoreLabelNode.position = CGPointMake(self.frame.size.width/2,120);
-    self.scoreLabelNode.zPosition = 100;
-    self.scoreLabelNode.name = @"scoreLabelNode";
-    self.scoreLabelNode.fontColor = [SKColor blackColor];
-    self.scoreLabelNode.fontSize = 65;
-    [self updateScoreLabelNode];
-    [self addChild:self.scoreLabelNode];
-    
     
     //the touch point
     self.showsTouchPoint = [[SKShapeNode alloc] init];
@@ -144,29 +133,8 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.showsTouchPoint.glowWidth = 0.0;
     self.showsTouchPoint.zPosition = 15;
     
+    //SET UP VOLLEYBALL
     [self setUpVolleyBall];
-    
-    
-    //fence texture - this is all BS, using an arbitrary texture and height is all fudged
-    SKTexture *fenceTexture = [SKTexture textureWithImageNamed:@"yellow+dot+med"];
-    fenceTexture.filteringMode = SKTextureFilteringNearest;
-    
-    for(NSUInteger i = 0 ; i < 2 + self.frame.size.height/(fenceTexture.size.height*2)-2; i++)
-    {
-        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:fenceTexture];
-        sprite.position = CGPointMake(self.frame.size.width / 2, (sprite.size.height)*i - 5); // subtraction places yellow balls closer together
-        [self addChild:sprite];
-    }
-    
-    //fence node setup - this seems to be alright
-    SKNode *fenceNode = [SKNode node];
-    fenceNode.position = CGPointMake(self.frame.size.width/2 , 0); // NODE POSITION
-    fenceNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(20, self.frame.size.height/2) center:(CGPointMake(0, self.frame.size.height/4))]; //where to center this IN THE NODE
-    fenceNode.physicsBody.categoryBitMask = fenceCategory;
-    fenceNode.physicsBody.contactTestBitMask = ballCategory;
-    fenceNode.physicsBody.dynamic = NO;
-    fenceNode.physicsBody.allowsRotation = NO;
-    [self addChild:fenceNode];
     
     //SET UP COURT
     [self setUpTheCourtBounds];
@@ -174,43 +142,69 @@ static const uint32_t ceilingCategory = 1 << 5;
     //SET UP GROUND METHOD
     [self setUpGround];
     
+    //SET UP SCORE LABEL NODES
+    [self scoreLabelNodesSetup];
+    
+    //SET UP FENCE / NET
+    [self setUpFenceNodes];
+    
+    
+    
+    
     self.gameInPlay = NO;
     
 }
 
--(void)placeRestartGameButton
-{
-    self.gameStopped = YES;
-    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-        self.restartButton = [SKLabelNode labelNodeWithFontNamed:@"ChalkboardSE-Bold"]; //http://iosfonts.com/
-        self.restartButton.position = CGPointMake(self.frame.size.width/2,self.frame.size.height/2);
-        self.restartButton.zPosition = 100;
-        self.restartButton.text = [NSString stringWithFormat:@"TAP TO RESET SERVE"];
-        self.restartButton.name = @"resetGameNode";
-        self.restartButton.fontColor = [SKColor blackColor];
-        self.restartButton.fontSize = 80;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
-            if((self.hostValue == self.localGameStore.theBallServer) || self.hostValue == 2)
-            {
-                self.readyToRestart = YES;
-            }
-            
-        });
-        [self addChild:self.restartButton];
-    });
-}
-
-
 
 #pragma mark - set up scene nodes
 
--(void)updateScoreLabelNode
+-(void)setUpVolleyBall
 {
-    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu     -     %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
-    
+    // volleyball
+    SKTexture *volleyballTexture = [SKTexture textureWithImageNamed:@"Volleyball"];
+    volleyballTexture.filteringMode = SKTextureFilteringNearest;
+    self.volleyBall = [SKSpriteNode spriteNodeWithTexture:volleyballTexture];
+    CGFloat volleyballScaleRatio = 1.0 / 6 * self.screenHeight / self.volleyBall.size.height; // volleyball size to screen size ratio
+    [self.volleyBall setScale:volleyballScaleRatio];
+    self.volleyBall.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.volleyBall.size.height/2];
+    self.volleyBall.physicsBody.allowsRotation = YES;
+    self.volleyBall.physicsBody.mass = 0.33;
+    self.volleyBall.physicsBody.dynamic = YES;
+    self.volleyBall.physicsBody.accessibilityLabel = @"volleyBall";
+    self.volleyBall.physicsBody.categoryBitMask = ballCategory;
+    self.volleyBall.physicsBody.collisionBitMask = fenceCategory | worldCategory | ceilingCategory | floorCategoryLeft | floorCategoryRight; // bounces off
+    self.volleyBall.physicsBody.contactTestBitMask = fenceCategory | floorCategoryLeft; // notifications when collisions
+    self.volleyBall.zPosition = 10;
+    if ([GameAndScoreDetails sharedGameDataStore].theBallServer == LeftPlayerServe)
+    {
+        self.volleyBall.position = CGPointMake(self.screenWidth*1/6, self.screenHeight*3.5/5);
+    } else {
+        self.volleyBall.position = CGPointMake(self.screenWidth*5/6, self.screenHeight*3.5/5);
+    }
+    [self addChild:self.volleyBall];
 }
+
+-(void)setUpFenceNodes
+{
+    CGSize fenceSize = CGSizeMake(10, self.screenHeight/2.125);
+    SKShapeNode *fenceShapeNode = [SKShapeNode shapeNodeWithRectOfSize:fenceSize cornerRadius:7];
+    fenceShapeNode.fillColor = [SKColor whiteColor];
+    fenceShapeNode.position = CGPointMake(self.screenWidth / 2.0, self.screenHeight / 3.0);
+    fenceShapeNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:fenceSize];
+    fenceShapeNode.physicsBody.categoryBitMask = fenceCategory;
+    fenceShapeNode.physicsBody.contactTestBitMask = ballCategory;
+    fenceShapeNode.physicsBody.dynamic = NO;
+    fenceShapeNode.physicsBody.allowsRotation = NO;
+    fenceShapeNode.zPosition = 5;
+    [self addChild:fenceShapeNode];
+}
+
+
 -(void)setUpTheCourtBounds
 {
+    self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
+    [self setBackgroundColor:self.skyColor];
+    
     //wall one set up
     self.wallNodeOne = [SKNode node];
     self.wallNodeOne.position = CGPointMake(0, 0);
@@ -241,38 +235,9 @@ static const uint32_t ceilingCategory = 1 << 5;
 }
 
 
--(void)setUpVolleyBall
-{
-    // volleyball
-    SKTexture *volleyballTexture = [SKTexture textureWithImageNamed:@"Volleyball"];
-    volleyballTexture.filteringMode = SKTextureFilteringNearest;
-    self.volleyBall = [SKSpriteNode spriteNodeWithTexture:volleyballTexture];
-    CGFloat volleyballScaleRatio = 1.0 / 6 * self.screenHeight / self.volleyBall.size.height; // volleyball size to screen size ratio
-    [self.volleyBall setScale:volleyballScaleRatio];
-    self.volleyBall.physicsBody = [SKPhysicsBody bodyWithCircleOfRadius:self.volleyBall.size.height/2];
-    self.volleyBall.physicsBody.allowsRotation = YES;
-    self.volleyBall.physicsBody.mass = 0.25;
-    self.volleyBall.physicsBody.dynamic = YES;
-    self.volleyBall.physicsBody.accessibilityLabel = @"volleyBall";
-    self.volleyBall.physicsBody.categoryBitMask = ballCategory;
-    self.volleyBall.physicsBody.collisionBitMask = fenceCategory | worldCategory | ceilingCategory | floorCategoryLeft | floorCategoryRight; // bounces off
-    self.volleyBall.physicsBody.contactTestBitMask = fenceCategory | floorCategoryLeft; // notifications when collisions
-    self.volleyBall.zPosition = 10;
-    if ([GameAndScoreDetails sharedGameDataStore].theBallServer == LeftPlayerServe)
-    {
-        self.volleyBall.position = CGPointMake(self.screenWidth*1/6, self.screenHeight*3/5);
-    } else {
-        self.volleyBall.position = CGPointMake(self.screenWidth*5/6, self.screenHeight*3/5);
-    }
-    [self addChild:self.volleyBall];
-}
-
-
 -(void)setUpGround
 {
-    //ground set up
-    SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"background-slice_converted"];
-    //    groundTexture.filteringMode = SKTextureFilteringNearest;
+    SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"background-slice_small_ocean&sand"];
     CGFloat heightRatio = self.size.height / groundTexture.size.height;
     CGFloat resultantHeight = 0;
     for(NSUInteger i = 0 ; i < 2 + self.screenWidth / groundTexture.size.width / heightRatio; i++)
@@ -282,7 +247,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 //        NSLog(@"%1.1f bg height",sprite.size.height);
 //        NSLog(@"%1.1f bg width",sprite.size.width);
         sprite.position = CGPointMake(i*sprite.size.width , self.screenHeight / 2.0);
-        sprite.zPosition = 5;
+        sprite.zPosition = 0;
         resultantHeight = sprite.position.y;
         [self addChild:sprite];
     }
@@ -290,16 +255,16 @@ static const uint32_t ceilingCategory = 1 << 5;
     //ground physics bodies set up
     
     self.groundNodeLeft = [SKNode node];
-    self.groundNodeLeft.position = CGPointMake(self.frame.size.width / 4, self.screenHeight * 194.0 / 750 / 2.0 - self.ballDepthInSand); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
-    self.groundNodeLeft.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.screenWidth / 2, self.screenHeight * 194.0 / 750)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeLeft.position = CGPointMake(self.frame.size.width / 4, self.screenHeight * 130 / 750 / 2.0 - self.ballDepthInSand); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeLeft.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.screenWidth / 2, self.screenHeight * 130 / 750)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
     self.groundNodeLeft.physicsBody.categoryBitMask = floorCategoryLeft;
     self.groundNodeLeft.physicsBody.contactTestBitMask = ballCategory;
     self.groundNodeLeft.physicsBody.dynamic = NO;
     [self addChild:self.groundNodeLeft];
     
     self.groundNodeRight = [SKNode node];
-    self.groundNodeRight.position = CGPointMake(self.frame.size.width * 3 / 4, self.screenHeight * 194.0 / 750 / 2.0 - self.ballDepthInSand); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
-    self.groundNodeRight.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.screenWidth / 2, self.screenHeight * 194.0 / 750 )]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
+    self.groundNodeRight.position = CGPointMake(self.frame.size.width * 3 / 4, self.screenHeight * 130 / 750 / 2.0 - self.ballDepthInSand); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
+    self.groundNodeRight.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.screenWidth / 2, self.screenHeight * 130 / 750 )]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
     self.groundNodeRight.physicsBody.categoryBitMask = floorCategoryRight;
     self.groundNodeRight.physicsBody.contactTestBitMask = ballCategory;
     self.groundNodeRight.physicsBody.dynamic = NO;
@@ -307,39 +272,46 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 }
 
--(void)oldGroundSetup
+-(void)scoreLabelNodesSetup
 {
-    //ground set up
-    SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"Ground"];
-    //    groundTexture.filteringMode = SKTextureFilteringNearest;
-    CGFloat resultantHeight = 0;
-    for(NSUInteger i = 0 ; i < 2 + self.frame.size.width/(groundTexture.size.width*2); i++)
-    {
-        SKSpriteNode *sprite = [SKSpriteNode spriteNodeWithTexture:groundTexture];
-        [sprite setScale:2.0]; //CHECK THIS OUT
-        sprite.position = CGPointMake(i*sprite.size.width, sprite.size.height / 2 + groundTexture.size.height * 2 - (self.screenSizeMultiplier* self.view.frame.size.height)); //CHECK THIS OUT
-        sprite.zPosition = 5;
-        resultantHeight = sprite.position.y;
-        [self addChild:sprite];
-    }
+    // SCORE LABEL SETUP
+    self.scoreLabelNode = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
+    self.scoreLabelNode.zPosition = 100;
+    self.scoreLabelNode.name = @"scoreLabelNode";
+    self.scoreLabelNode.fontColor = [SKColor whiteColor];
+    self.scoreLabelNode.fontSize = self.screenHeight / 7;
+    self.scoreLabelNode.position = CGPointMake(self.screenWidth / 2, self.screenHeight / 19);
+    [self updateScoreLabelNode];
+    [self addChild:self.scoreLabelNode];
+}
+
+-(void)updateScoreLabelNode
+{
+    self.scoreLabelNode.text = [NSString stringWithFormat:@"%lu              %lu",(unsigned long)[GameAndScoreDetails sharedGameDataStore].leftPlayerScore,(unsigned long)[GameAndScoreDetails sharedGameDataStore].rightPlayerScore];
     
-    //ground physics bodies set up
-    
-    self.groundNodeLeft = [SKNode node];
-    self.groundNodeLeft.position = CGPointMake(self.frame.size.width / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
-    self.groundNodeLeft.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
-    self.groundNodeLeft.physicsBody.categoryBitMask = floorCategoryLeft;
-    self.groundNodeLeft.physicsBody.contactTestBitMask = ballCategory;
-    self.groundNodeLeft.physicsBody.dynamic = NO;
-    [self addChild:self.groundNodeLeft];
-    
-    self.groundNodeRight = [SKNode node];
-    self.groundNodeRight.position = CGPointMake(self.frame.size.width * 3 / 4, resultantHeight - 10 ); // CENTERS ONE QUARTER OF WIDTH AND MULTIPLY HEIGHT BY TWO BECAUSE OF SCALING
-    self.groundNodeRight.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:CGSizeMake(self.frame.size.width / 2, groundTexture.size.height*2 - self.ballDepthInSand)]; // SUBTRACTING ALLOWS BALL TO SIT ON SAND
-    self.groundNodeRight.physicsBody.categoryBitMask = floorCategoryRight;
-    self.groundNodeRight.physicsBody.contactTestBitMask = ballCategory;
-    self.groundNodeRight.physicsBody.dynamic = NO;
-    [self addChild:self.groundNodeRight];
+}
+
+
+-(void)placeRestartGameButton
+{
+    self.gameStopped = YES;
+    dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        self.restartButton = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
+        self.restartButton.position = CGPointMake(self.frame.size.width/2,self.frame.size.height * 2.75 / 4);
+        self.restartButton.zPosition = 100;
+        self.restartButton.text = [NSString stringWithFormat:@"TAP TO RESET SERVE"];
+        self.restartButton.name = @"resetGameNode";
+        self.restartButton.fontColor = [SKColor whiteColor];
+        self.restartButton.fontSize = self.screenWidth / 14.0;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            if((self.hostValue == self.localGameStore.theBallServer) || self.hostValue == 2)
+            {
+                self.readyToRestart = YES;
+            }
+            
+        });
+        [self addChild:self.restartButton];
+    });
 }
 
 #pragma mark - Touch and Hitting

@@ -17,6 +17,8 @@
 		961927021BE924F6003A4E2A /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 961927001BE924F6003A4E2A /* LaunchScreen.storyboard */; };
 		9619270D1BE924F6003A4E2A /* volleyballTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 9619270C1BE924F6003A4E2A /* volleyballTests.m */; };
 		961927181BE924F6003A4E2A /* volleyballUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = 961927171BE924F6003A4E2A /* volleyballUITests.m */; };
+		96276DC31BFB97DB005D242D /* spincycle_3d_ot.otf in Resources */ = {isa = PBXBuildFile; fileRef = 96276DC11BFB97DB005D242D /* spincycle_3d_ot.otf */; };
+		96276DC41BFB97DB005D242D /* spincycle_ot.otf in Resources */ = {isa = PBXBuildFile; fileRef = 96276DC21BFB97DB005D242D /* spincycle_ot.otf */; };
 		967068B81BEA6D3B003277D3 /* GameAndScoreDetails.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068B71BEA6D3B003277D3 /* GameAndScoreDetails.m */; };
 		967068BB1BEA78AD003277D3 /* MultiplayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068BA1BEA78AD003277D3 /* MultiplayerViewController.m */; };
 		967068BE1BEA7BF2003277D3 /* InitialViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068BD1BEA7BF2003277D3 /* InitialViewController.m */; };
@@ -61,6 +63,8 @@
 		961927131BE924F6003A4E2A /* volleyballUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = volleyballUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		961927171BE924F6003A4E2A /* volleyballUITests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = volleyballUITests.m; sourceTree = "<group>"; };
 		961927191BE924F6003A4E2A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		96276DC11BFB97DB005D242D /* spincycle_3d_ot.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = spincycle_3d_ot.otf; sourceTree = "<group>"; };
+		96276DC21BFB97DB005D242D /* spincycle_ot.otf */ = {isa = PBXFileReference; lastKnownFileType = file; path = spincycle_ot.otf; sourceTree = "<group>"; };
 		967068B61BEA6D3B003277D3 /* GameAndScoreDetails.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GameAndScoreDetails.h; sourceTree = "<group>"; };
 		967068B71BEA6D3B003277D3 /* GameAndScoreDetails.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GameAndScoreDetails.m; sourceTree = "<group>"; };
 		967068B91BEA78AD003277D3 /* MultiplayerViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = MultiplayerViewController.h; sourceTree = "<group>"; };
@@ -141,7 +145,6 @@
 				967068B61BEA6D3B003277D3 /* GameAndScoreDetails.h */,
 				967068B71BEA6D3B003277D3 /* GameAndScoreDetails.m */,
 				961927001BE924F6003A4E2A /* LaunchScreen.storyboard */,
-				961927031BE924F6003A4E2A /* Info.plist */,
 				961926ED1BE924F6003A4E2A /* Supporting Files */,
 			);
 			path = volleyball;
@@ -150,7 +153,10 @@
 		961926ED1BE924F6003A4E2A /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				96276DC11BFB97DB005D242D /* spincycle_3d_ot.otf */,
+				96276DC21BFB97DB005D242D /* spincycle_ot.otf */,
 				961926EE1BE924F6003A4E2A /* main.m */,
+				961927031BE924F6003A4E2A /* Info.plist */,
 			);
 			name = "Supporting Files";
 			sourceTree = "<group>";
@@ -278,7 +284,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				961926F71BE924F6003A4E2A /* GameScene.sks in Resources */,
+				96276DC31BFB97DB005D242D /* spincycle_3d_ot.otf in Resources */,
 				961927021BE924F6003A4E2A /* LaunchScreen.storyboard in Resources */,
+				96276DC41BFB97DB005D242D /* spincycle_ot.otf in Resources */,
 				961926FF1BE924F6003A4E2A /* Assets.xcassets in Resources */,
 				961926FD1BE924F6003A4E2A /* Main.storyboard in Resources */,
 			);

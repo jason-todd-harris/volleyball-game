@@ -19,6 +19,9 @@
     // Override point for customization after application launch.
     [GameAndScoreDetails sharedGameDataStore];
     
+    
+        NSLog(@"SpinCycle3DOT and SpinCycleOT");
+    
     return YES;
 }
 
