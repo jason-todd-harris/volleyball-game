@@ -30,6 +30,8 @@
 //@property (nonatomic, assign) bool allowReceivingData;
 
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
+@property (nonatomic, assign) CGFloat screenHeight;
+@property (nonatomic, assign) CGFloat screenWidth;
 @property (nonatomic, assign) NSUInteger hostValue;
 @property (nonatomic, strong) NSString *gameScore;
 @property (nonatomic, strong) GameAndScoreDetails *localGameStore;
@@ -58,6 +60,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
+    [self setScreenHeightandWidth];
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
     self.skyColor = [SKColor colorWithRed:112/255.0 green:200/255.0 blue:230/255.0 alpha:1.0];
@@ -102,6 +105,13 @@ static const uint32_t ceilingCategory = 1 << 5;
 }
 
 
+
+-(void)setScreenHeightandWidth
+{
+    CGSize screenSize = [UIScreen mainScreen].bounds.size;
+    self.screenWidth = MAX(screenSize.width, screenSize.height);
+    self.screenHeight = MIN(screenSize.width, screenSize.height);
+}
 
 
 -(void)setupSceneAndNodes
