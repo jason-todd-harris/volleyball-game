@@ -10,11 +10,15 @@
 #import "gameAndScoreDetails.h"
 #import "GameScene.h"
 #import <GameKit/GameKit.h>
+#import <Masonry.h>
+
 
 @interface MultiplayerViewController ()
 @property (weak, nonatomic) IBOutlet UILabel *connectingLabel;
 @property (nonatomic, assign) NSUInteger firstConnection;
-
+@property (nonatomic, strong) UIButton *backButton;
+@property (nonatomic, assign) CGFloat screenWidth;
+@property (nonatomic, assign) CGFloat screenHeight;
 
 @end
 
@@ -43,12 +47,12 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
+    [self setScreenHeightandWidth];
     
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(dismissThisViewController:)
                                                  name:@"dismissSelf"
                                                object:nil];
-    
     self.firstConnection = 0;
     self.connectingLabel.text = @"Looking for another player";
 //    self.connectingLabel.text = [NSString stringWithFormat:@"Looking for Player %@",[GameAndScoreDetails sharedGameDataStore].host ? @"1":@"2"];
@@ -57,6 +61,7 @@
     self.partyTime.delegate = self;
     [self.partyTime startAPaty];
     [self.partyTime joinParty];
+//    [self displayButtons];
 //    [self loadTheGame]; // WILL LOAD GAME WITHOUT CONNECTION
     
     
@@ -70,7 +75,7 @@
     SKView * skView = (SKView *)self.view;
     skView.showsFPS = YES;
     skView.showsNodeCount = YES;
-    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
+//    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
     /* Sprite Kit applies additional optimizations to improve rendering performance */
     skView.ignoresSiblingOrder = YES;
     
@@ -105,6 +110,55 @@
     }
 }
 
+#pragma mark - buttons
+
+
+-(void)displayButtons
+{
+    UIImage *exitButtonImage = [UIImage imageNamed:@"beachvolleyball-exitbutton"];
+    CGFloat sizeRatio = exitButtonImage.size.height / self.screenHeight * 8;
+    exitButtonImage = [UIImage imageWithCGImage:exitButtonImage.CGImage
+                                          scale:sizeRatio                           // scales image down smaller
+                                    orientation:UIImageOrientationUpMirrored];    //flips image
+    self.backButton = [[UIButton alloc] init];
+    self.backButton.accessibilityLabel = @"backButton";
+    [self.backButton setImage:exitButtonImage forState:UIControlStateNormal];
+    
+    [self.view addSubview:self.backButton];
+    
+    NSLog(@"%1f",exitButtonImage.size.height);
+    
+    [self.backButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(self.view).offset(15);
+        make.bottomMargin.equalTo(self.view).offset(-15);
+    }];
+    
+    
+    NSArray *buttonArray = @[self.backButton];
+    for (UIButton *button in buttonArray) {
+        [button addTarget:self
+                   action:@selector(buttonClicked:)
+         forControlEvents:UIControlEventTouchUpInside];
+    }
+}
+
+
+
+
+-(void)buttonClicked:(UIButton *)sender
+{
+    self.partyTime.delegate = nil;
+    [self.partyTime stopAcceptingGuests];
+    [self.partyTime leaveParty];
+    
+    
+    if([sender.accessibilityLabel isEqualToString:@"backButton"])
+    {
+        [self dismissViewControllerAnimated:NO completion:nil];
+    }
+}
+
+
 
 #pragma mark - multipeer connectivity
 - (void)partyTime:(PLPartyTime *)partyTime
@@ -128,15 +182,17 @@
         [self loadTheGame];
     } else if (state == 0)
     {
+        UIAlertController *disconnectAlert = [UIAlertController alertControllerWithTitle:@"Game Over"
+                                                                                 message:@"Opponent disconnected"
+                                                                          preferredStyle:UIAlertControllerStyleAlert];
+        UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault
+                                                              handler:^(UIAlertAction * action) {}];
+        
+        [disconnectAlert addAction:defaultAction];
+        
+        [self presentViewController:disconnectAlert animated:YES completion:nil];
         [self dismissViewControllerAnimated:YES completion:^{
-            UIAlertController *disconnectAlert = [UIAlertController alertControllerWithTitle:@"Game Over"
-                                                                                     message:@"Opponent disconnected"
-                                                                              preferredStyle:UIAlertControllerStyleAlert];
-            UIAlertAction* defaultAction = [UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleDefault
-                                                                  handler:^(UIAlertAction * action) {}];
-            
-            [disconnectAlert addAction:defaultAction];
-            [self presentViewController:disconnectAlert animated:YES completion:nil];
+            //NO COMPLETION ON THIS
         }];
     }
     
@@ -189,6 +245,14 @@ failedToJoinParty:(NSError *)error
 
 - (BOOL)prefersStatusBarHidden {
     return YES;
+}
+
+
+-(void)setScreenHeightandWidth
+{
+    CGSize screenSize = [UIScreen mainScreen].bounds.size;
+    self.screenWidth = MAX(screenSize.width, screenSize.height);
+    self.screenHeight = MIN(screenSize.width, screenSize.height);
 }
 
 

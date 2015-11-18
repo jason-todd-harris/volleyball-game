@@ -76,11 +76,7 @@
         [self.view.window.layer addAnimation:transition forKey:nil];
         
         [self dismissViewControllerAnimated:NO completion:nil];
-        
     }
-    
-    
-    
 }
 
 
