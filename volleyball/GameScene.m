@@ -20,6 +20,7 @@
 @property (nonatomic, strong) SKNode *wallNodeTwo;
 @property (nonatomic, strong) SKLabelNode *scoreLabelNode;
 @property (nonatomic, strong) SKLabelNode *restartButton;
+@property (nonatomic, strong) SKNode *backButton;
 
 //TRACKING VALUES (TOO MANY OF THESE)
 @property (nonatomic, assign) bool allowBallHit; //GAME IN PLAY
@@ -111,20 +112,14 @@ static const uint32_t ceilingCategory = 1 << 5;
 }
 
 
--(void)setScreenHeightandWidth
-{
-    CGSize screenSize = [UIScreen mainScreen].bounds.size;
-    self.screenWidth = MAX(screenSize.width, screenSize.height);
-    self.screenHeight = MIN(screenSize.width, screenSize.height);
-}
-
-
 -(void)setupSceneAndNodes
 {
     [self removeAllChildren];
     self.physicsWorld.gravity = CGVectorMake(0.0, 0.0);
     self.readyToRestart = NO;
     self.gameStopped = NO;
+    [GameAndScoreDetails sharedGameDataStore].rightPlayerHits = 0;
+    [GameAndScoreDetails sharedGameDataStore].leftPlayerHits = 0;
     
     
     //the touch point
@@ -155,7 +150,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     //SET UP PLAYER NAME LABELS
     [self setUpPlayerNames];
-    
     
     self.allowBallHit = NO;
     
@@ -342,7 +336,6 @@ static const uint32_t ceilingCategory = 1 << 5;
 }
 
 
-
 -(void)placeRestartGameButton
 {
     self.gameStopped = YES;
@@ -364,8 +357,10 @@ static const uint32_t ceilingCategory = 1 << 5;
             
         });
         [self addChild:self.restartButton];
+        [self exitGameButton];
     });
 }
+
 
 #pragma mark - Touch and Hitting
 
@@ -373,6 +368,17 @@ static const uint32_t ceilingCategory = 1 << 5;
     /* Called when a touch begins */
     
     UITouch *firstTouch = touches.anyObject;
+    
+    if([self shouldHitExitButton:firstTouch])
+    {
+        [self removeFromParent];
+        [self.view presentScene:nil];
+        [[NSNotificationCenter defaultCenter] postNotificationName:@"dismissSelf"
+                                                            object:self];
+        
+    }
+    
+    
     
     if([self shouldBallBeHit:firstTouch] && self.allowBallHit)
     {
@@ -631,8 +637,43 @@ static const uint32_t ceilingCategory = 1 << 5;
 //    
 //}
 
+#pragma mark - exit buttons
 
-#pragma mark - math helper
+-(void)exitGameButton
+{
+    SKTexture *backButtonTexture = [SKTexture textureWithImageNamed:@"beachvolleyball-exitbutton"];
+    self.backButton = [SKSpriteNode spriteNodeWithTexture:backButtonTexture];
+    
+    CGFloat scaleRatio =  self.screenHeight/backButtonTexture.size.height / 8;
+    [self.backButton setScale:scaleRatio];
+    self.backButton.position = CGPointMake(self.backButton.frame.size.height*2/3,self.backButton.frame.size.height*2/3);
+    self.backButton.zPosition = 102;
+    self.backButton.name = @"exitButtonNode";
+    self.backButton.alpha = 0.75;
+    [self addChild:self.backButton];
+    
+    SKAction *rotate = [SKAction rotateByAngle:M_PI duration:0];
+    [self.backButton runAction:rotate];
+    
+}
+
+-(BOOL)shouldHitExitButton:(UITouch *)firstTouch
+{
+    
+    CGPoint exitTouch = [firstTouch locationInNode:self.backButton];
+    CGFloat xDistance = exitTouch.x;
+    CGFloat yDistance = exitTouch.y;
+    CGFloat heightExit = self.backButton.frame.size.height;
+    
+    bool closeToBackButton = (ABS(xDistance) < heightExit) && (ABS(yDistance) < heightExit);
+    
+    return closeToBackButton;
+}
+
+
+
+
+#pragma mark - helpers
 
 CGFloat constrainFloat(CGFloat min, CGFloat max, CGFloat value) {
     if( value > max ) {
@@ -643,6 +684,14 @@ CGFloat constrainFloat(CGFloat min, CGFloat max, CGFloat value) {
         return value;
     }
 }
+
+-(void)setScreenHeightandWidth
+{
+    CGSize screenSize = [UIScreen mainScreen].bounds.size;
+    self.screenWidth = MAX(screenSize.width, screenSize.height);
+    self.screenHeight = MIN(screenSize.width, screenSize.height);
+}
+
 
 
 

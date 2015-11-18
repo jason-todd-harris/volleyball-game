@@ -12,6 +12,7 @@
 #import <Masonry.h>
 #import "GameViewController.h"
 #import "MultiplayerViewController.h"
+#import "SettingsViewController.h"
 
 
 @interface InitialViewController ()
@@ -31,10 +32,6 @@
 - (void)viewDidLoad {
     [super viewDidLoad];
     
-    [[NSOperationQueue mainQueue] addOperationWithBlock:^{
-        //MAIN THREAD BLOCK
-        
-    }];
     [self setScreenHeightandWidth];
     // Do any additional setup after loading the view.
     UIImage *backgroundSlice = [UIImage imageNamed:@"background-slice_small_ocean&sand"];
@@ -133,7 +130,6 @@
     UIStoryboard *sb = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     if([sendingButton.accessibilityLabel isEqualToString:@"singlePlayer"])
     {
-        
         GameViewController *newGame = [sb instantiateViewControllerWithIdentifier:@"GameViewController"];
         [self presentViewController:newGame animated:YES completion:^{
             //completion
@@ -152,6 +148,17 @@
     } else if ([sendingButton.accessibilityLabel isEqualToString:@"settings"])
     {
         
+        CATransition *transition = [CATransition animation];
+        transition.duration = 0.3;
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+        transition.type = kCATransitionPush;
+        transition.subtype = kCATransitionFromRight;
+        [self.view.window.layer addAnimation:transition forKey:nil];
+        
+        SettingsViewController *settingsVC = [[SettingsViewController alloc] init];
+        [self presentViewController:settingsVC animated:NO completion:^{
+            //completion
+        }];
     }
     
 }

@@ -36,13 +36,14 @@
     [super viewDidLoad];
 
     // Configure the view.
-//    SKView * skView = [[SKView alloc] init];
-//    [self.view addSubview:skView];
-//    self.view = skView;
-//    
-//    [skView mas_makeConstraints:^(MASConstraintMaker *make) {
-//        make.edges.equalTo(self.view);
-//    }];
+    
+    
+    [[NSNotificationCenter defaultCenter] addObserver:self
+                                             selector:@selector(dismissThisViewController:)
+                                                 name:@"dismissSelf"
+                                               object:nil];
+    
+    
     
     
     SKView * skView = (SKView *)self.view;
@@ -62,6 +63,17 @@
     // Present the scene.
     [skView presentScene:scene];
 }
+
+
+-(void)dismissThisViewController:(id)selector
+{
+    [self dismissViewControllerAnimated:YES completion:^{
+        // REMOVE NSNOTIFICATION
+        [[NSNotificationCenter defaultCenter] removeObserver:self];
+    }];
+    
+}
+
 
 - (BOOL)shouldAutorotate
 {

@@ -24,6 +24,7 @@
 		967068BB1BEA78AD003277D3 /* MultiplayerViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068BA1BEA78AD003277D3 /* MultiplayerViewController.m */; };
 		967068BE1BEA7BF2003277D3 /* InitialViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068BD1BEA7BF2003277D3 /* InitialViewController.m */; };
 		967068C11BEA7E18003277D3 /* PLPartyTime.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068C01BEA7E18003277D3 /* PLPartyTime.m */; };
+		96AF908E1BFCC75200BCFC96 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 96AF908D1BFCC75200BCFC96 /* SettingsViewController.m */; };
 		96E7A3DD1BF26DF700B7482B /* TestClass.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E7A3DC1BF26DF700B7482B /* TestClass.m */; };
 /* End PBXBuildFile section */
 
@@ -75,6 +76,8 @@
 		967068BD1BEA7BF2003277D3 /* InitialViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = InitialViewController.m; sourceTree = "<group>"; };
 		967068BF1BEA7E18003277D3 /* PLPartyTime.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = PLPartyTime.h; sourceTree = "<group>"; };
 		967068C01BEA7E18003277D3 /* PLPartyTime.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = PLPartyTime.m; sourceTree = "<group>"; };
+		96AF908C1BFCC75200BCFC96 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
+		96AF908D1BFCC75200BCFC96 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
 		96E7A3DB1BF26DF600B7482B /* TestClass.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = TestClass.h; sourceTree = "<group>"; };
 		96E7A3DC1BF26DF700B7482B /* TestClass.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = TestClass.m; sourceTree = "<group>"; };
 		AA6D1F5E922E5CDB9B2CC3A1 /* Pods-volleyball.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-volleyball.debug.xcconfig"; path = "Pods/Target Support Files/Pods-volleyball/Pods-volleyball.debug.xcconfig"; sourceTree = "<group>"; };
@@ -145,21 +148,23 @@
 				961926F31BE924F6003A4E2A /* GameScene.h */,
 				961926F41BE924F6003A4E2A /* GameScene.m */,
 				961926F61BE924F6003A4E2A /* GameScene.sks */,
+				961926FB1BE924F6003A4E2A /* Main.storyboard */,
 				961926F81BE924F6003A4E2A /* GameViewController.h */,
 				961926F91BE924F6003A4E2A /* GameViewController.m */,
-				961926FB1BE924F6003A4E2A /* Main.storyboard */,
+				967068B91BEA78AD003277D3 /* MultiplayerViewController.h */,
+				967068BA1BEA78AD003277D3 /* MultiplayerViewController.m */,
+				961927001BE924F6003A4E2A /* LaunchScreen.storyboard */,
+				96AF908C1BFCC75200BCFC96 /* SettingsViewController.h */,
+				96AF908D1BFCC75200BCFC96 /* SettingsViewController.m */,
 				967068BC1BEA7BF2003277D3 /* InitialViewController.h */,
 				967068BD1BEA7BF2003277D3 /* InitialViewController.m */,
 				961926FE1BE924F6003A4E2A /* Assets.xcassets */,
-				967068B91BEA78AD003277D3 /* MultiplayerViewController.h */,
-				967068BA1BEA78AD003277D3 /* MultiplayerViewController.m */,
 				967068BF1BEA7E18003277D3 /* PLPartyTime.h */,
 				967068C01BEA7E18003277D3 /* PLPartyTime.m */,
 				96E7A3DB1BF26DF600B7482B /* TestClass.h */,
 				96E7A3DC1BF26DF700B7482B /* TestClass.m */,
 				967068B61BEA6D3B003277D3 /* GameAndScoreDetails.h */,
 				967068B71BEA6D3B003277D3 /* GameAndScoreDetails.m */,
-				961927001BE924F6003A4E2A /* LaunchScreen.storyboard */,
 				961926ED1BE924F6003A4E2A /* Supporting Files */,
 			);
 			path = volleyball;
@@ -395,6 +400,7 @@
 				967068C11BEA7E18003277D3 /* PLPartyTime.m in Sources */,
 				967068BB1BEA78AD003277D3 /* MultiplayerViewController.m in Sources */,
 				967068B81BEA6D3B003277D3 /* GameAndScoreDetails.m in Sources */,
+				96AF908E1BFCC75200BCFC96 /* SettingsViewController.m in Sources */,
 				967068BE1BEA7BF2003277D3 /* InitialViewController.m in Sources */,
 				961926EF1BE924F6003A4E2A /* main.m in Sources */,
 			);
