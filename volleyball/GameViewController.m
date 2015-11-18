@@ -8,6 +8,7 @@
 
 #import "GameViewController.h"
 #import "GameScene.h"
+#import <Masonry.h>
 
 @implementation SKScene (Unarchive)
 
@@ -35,7 +36,18 @@
     [super viewDidLoad];
 
     // Configure the view.
+//    SKView * skView = [[SKView alloc] init];
+//    [self.view addSubview:skView];
+//    self.view = skView;
+//    
+//    [skView mas_makeConstraints:^(MASConstraintMaker *make) {
+//        make.edges.equalTo(self.view);
+//    }];
+    
+    
     SKView * skView = (SKView *)self.view;
+    
+    
     skView.showsFPS = YES;
     skView.showsNodeCount = YES;
     skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH

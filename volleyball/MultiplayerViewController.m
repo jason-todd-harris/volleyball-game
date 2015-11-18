@@ -44,12 +44,14 @@
 {
     [super viewDidLoad];
     self.firstConnection = 0;
-    self.connectingLabel.text = [NSString stringWithFormat:@"Looking for Player %@",[GameAndScoreDetails sharedGameDataStore].host ? @"1":@"2"];
+    self.connectingLabel.text = @"Looking for another player";
+//    self.connectingLabel.text = [NSString stringWithFormat:@"Looking for Player %@",[GameAndScoreDetails sharedGameDataStore].host ? @"1":@"2"];
     
     self.partyTime = [[PLPartyTime alloc] initWithServiceType:@"test"];   //@"volleyBallGame"];
     self.partyTime.delegate = self;
     [self.partyTime startAPaty];
     [self.partyTime joinParty];
+//    [self loadTheGame]; // WILL LOAD GAME WITHOUT CONNECTION
     
     
 }
@@ -60,7 +62,7 @@
    didReceiveData:(NSData *)data
          fromPeer:(MCPeerID *)peerID
 {
-    NSLog(@"received data !!!");
+//    NSLog(@"received data !!!");
     [self.delegate dataWasReceived:data];
     
 }
@@ -104,21 +106,45 @@ failedToJoinParty:(NSError *)error
 {
     // Configure the view.
     SKView * skView = (SKView *)self.view;
-//    skView.showsFPS = YES;
-//    skView.showsNodeCount = YES;
-//    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
+    skView.showsFPS = YES;
+    skView.showsNodeCount = YES;
+    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
     /* Sprite Kit applies additional optimizations to improve rendering performance */
     skView.ignoresSiblingOrder = YES;
     
     // Create and configure the scene.
     GameScene *scene = [GameScene unarchiveFromFile:@"GameScene"];
-    scene.scaleMode = SKSceneScaleModeAspectFill;
+    scene.scaleMode = SKSceneScaleModeResizeFill;
     scene.partyTime = self.partyTime;
     scene.multiPlayerVC = self;
     [self.connectingLabel removeFromSuperview];
     
-    // Present the scene.
-    [skView presentScene:scene];
+    //determine who is first and second player
+    
+    MCPeerID *thisPhoneID = self.partyTime.peerID;
+    MCPeerID *otherPhoneID = self.partyTime.connectedPeers[0];
+    NSString *thisPhoneName = thisPhoneID.displayName;
+    NSString *otherPhoneName = otherPhoneID.displayName;
+    
+    NSComparisonResult whoIsHost = [thisPhoneName compare:otherPhoneName];
+    
+    if (whoIsHost == NSOrderedAscending)
+    {
+        
+        [GameAndScoreDetails sharedGameDataStore].host = 0;
+        // Present the scene.
+        [skView presentScene:scene];
+    } else if ( whoIsHost == NSOrderedDescending)
+    {
+        
+        [GameAndScoreDetails sharedGameDataStore].host = 1;
+        // Present the scene.
+        [skView presentScene:scene];
+    }
+    
+    
+    
+    
     
 }
 

@@ -16,8 +16,8 @@ typedef NS_ENUM (NSUInteger, ballServer) {
 } NS_ENUM_AVAILABLE (10_10, 7_0);
 
 
-@property (nonatomic, readonly) NSUInteger leftPlayerScore;
-@property (nonatomic, readonly) NSUInteger rightPlayerScore;
+@property (nonatomic, assign) NSUInteger leftPlayerScore;
+@property (nonatomic, assign) NSUInteger rightPlayerScore;
 @property (nonatomic, assign) NSUInteger leftPlayerHits;
 @property (nonatomic, assign) NSUInteger rightPlayerHits;
 @property (nonatomic, assign) NSUInteger pointsPlayed;

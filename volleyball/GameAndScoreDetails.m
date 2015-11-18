@@ -12,8 +12,6 @@
 
 @interface GameAndScoreDetails ()
 
-@property (nonatomic, assign) NSUInteger leftPlayerScore;
-@property (nonatomic, assign) NSUInteger rightPlayerScore;
 @property (nonatomic, assign) ballServer theBallServer;
 
 @end
@@ -40,6 +38,9 @@
                       pointsPlayed:0];
     return self;
 }
+
+
+
 
 
 -(instancetype)initWithLeftScore:(NSUInteger)leftScore

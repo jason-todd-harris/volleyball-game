@@ -3,7 +3,6 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="9049"/>
-        <capability name="Constraints to layout margins" minToolsVersion="6.0"/>
     </dependencies>
     <scenes>
         <!--Initial View Controller-->
@@ -17,49 +16,9 @@
                     <view key="view" contentMode="scaleToFill" id="PuO-Yg-WcP">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="600"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
-                        <subviews>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="q47-wY-bvb">
-                                <rect key="frame" x="20" y="163" width="195" height="58"/>
-                                <animations/>
-                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="39"/>
-                                <state key="normal" title="New Game"/>
-                                <connections>
-                                    <segue destination="BV1-FR-VrT" kind="presentation" id="quN-fy-ziD"/>
-                                </connections>
-                            </button>
-                            <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="2wy-vF-c20">
-                                <rect key="frame" x="20" y="271" width="192" height="58"/>
-                                <animations/>
-                                <fontDescription key="fontDescription" name="HelveticaNeue" family="Helvetica Neue" pointSize="39"/>
-                                <state key="normal" title="Multiplayer"/>
-                                <connections>
-                                    <segue destination="Kfa-ck-eIc" kind="presentation" id="ufK-Zk-orR"/>
-                                </connections>
-                            </button>
-                            <segmentedControl opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="left" contentVerticalAlignment="top" segmentControlStyle="plain" selectedSegmentIndex="0" translatesAutoresizingMaskIntoConstraints="NO" id="Vgh-Bl-CyF">
-                                <rect key="frame" x="287" y="286" width="127" height="29"/>
-                                <animations/>
-                                <segments>
-                                    <segment title="Player 1"/>
-                                    <segment title="Player 2"/>
-                                </segments>
-                            </segmentedControl>
-                        </subviews>
                         <animations/>
                         <color key="backgroundColor" white="1" alpha="1" colorSpace="calibratedWhite"/>
-                        <constraints>
-                            <constraint firstItem="2wy-vF-c20" firstAttribute="centerY" secondItem="PuO-Yg-WcP" secondAttribute="centerY" id="6OM-wY-h6W"/>
-                            <constraint firstItem="Vgh-Bl-CyF" firstAttribute="leading" secondItem="2wy-vF-c20" secondAttribute="trailing" constant="75" id="Ey6-ej-fa4"/>
-                            <constraint firstAttribute="leadingMargin" secondItem="2wy-vF-c20" secondAttribute="leading" id="Kww-JW-sik"/>
-                            <constraint firstAttribute="leadingMargin" secondItem="q47-wY-bvb" secondAttribute="leading" id="g6e-fx-lnk"/>
-                            <constraint firstItem="2wy-vF-c20" firstAttribute="top" secondItem="q47-wY-bvb" secondAttribute="bottom" constant="50" id="kPA-jr-jkW"/>
-                            <constraint firstItem="Vgh-Bl-CyF" firstAttribute="centerY" secondItem="2wy-vF-c20" secondAttribute="centerY" id="p6c-dr-Szd"/>
-                        </constraints>
                     </view>
-                    <connections>
-                        <outlet property="hostSwitch" destination="Vgh-Bl-CyF" id="R9e-va-37o"/>
-                        <outlet property="multiplayerClicked" destination="2wy-vF-c20" id="wPJ-Fb-mMw"/>
-                    </connections>
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="Vni-Ts-gIx" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
@@ -68,7 +27,7 @@
         <!--Game View Controller-->
         <scene sceneID="tXr-a1-R10">
             <objects>
-                <viewController id="BV1-FR-VrT" customClass="GameViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="GameViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="BV1-FR-VrT" customClass="GameViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="8aa-yV-Osq"/>
                         <viewControllerLayoutGuide type="bottom" id="qHh-Mt-9TT"/>
@@ -87,7 +46,7 @@
         <!--Multiplayer View Controller-->
         <scene sceneID="MKq-1d-hjv">
             <objects>
-                <viewController id="Kfa-ck-eIc" customClass="MultiplayerViewController" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="MultiplayerViewController" useStoryboardIdentifierAsRestorationIdentifier="YES" id="Kfa-ck-eIc" customClass="MultiplayerViewController" sceneMemberID="viewController">
                     <layoutGuides>
                         <viewControllerLayoutGuide type="top" id="Q6R-lP-jfR"/>
                         <viewControllerLayoutGuide type="bottom" id="iV5-Is-WUa"/>

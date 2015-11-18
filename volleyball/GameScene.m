@@ -21,12 +21,13 @@
 @property (nonatomic, strong) SKLabelNode *scoreLabelNode;
 @property (nonatomic, strong) SKLabelNode *restartButton;
 
-//TRACKING VALUES
-@property (nonatomic, assign) bool gameInPlay; //GAME IN PLAY
-@property (nonatomic, assign) bool isMultiplayer;
-@property (nonatomic, assign) bool lastTapper;
+//TRACKING VALUES (TOO MANY OF THESE)
+@property (nonatomic, assign) bool allowBallHit; //GAME IN PLAY
 @property (nonatomic, assign) bool gameStopped; //GAME STOPPED
 @property (nonatomic, assign) bool readyToRestart; //READY TO RESTART
+
+@property (nonatomic, assign) bool isMultiplayer;
+@property (nonatomic, assign) bool lastTapper;
 //@property (nonatomic, assign) bool allowReceivingData;
 
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
@@ -98,7 +99,11 @@ static const uint32_t ceilingCategory = 1 << 5;
     if (self.lastTapper && self.frameCounter >3)
     {
         CGVector ballVector = self.volleyBall.physicsBody.velocity;
-        [self sendDataToPlayer:ballVector location:self.volleyBall.position updateOrTap:@"update" dataSendMode:MCSessionSendDataUnreliable];
+        [self sendDataToPlayer:ballVector
+                      location:self.volleyBall.position
+                   updateOrTap:@"update"
+                  dataSendMode:MCSessionSendDataUnreliable];
+        
         self.frameCounter = 0;
     }
     
@@ -152,7 +157,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     [self setUpPlayerNames];
     
     
-    self.gameInPlay = NO;
+    self.allowBallHit = NO;
     
 }
 
@@ -299,7 +304,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGFloat playerLabelFontSize = self.screenHeight / 10;
     CGFloat playerLabelHeight = self.screenHeight - self.screenHeight / 10;
     CGFloat playerLabelIndentation = self.screenWidth / 7;
-    CGFloat playerLabelAlpha = 0.33;
+    CGFloat playerLabelAlpha = 0.25;
     
     SKLabelNode *playerOneLabel = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
     playerOneLabel.zPosition = 1;
@@ -308,7 +313,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     playerOneLabel.fontSize = playerLabelFontSize;
     playerOneLabel.alpha = playerLabelAlpha;
     playerOneLabel.position = CGPointMake(playerLabelIndentation, playerLabelHeight);
-    [self addChild:playerOneLabel];
+    
     
     SKLabelNode *playerTwoLabel = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
     playerTwoLabel.zPosition = 1;
@@ -317,7 +322,22 @@ static const uint32_t ceilingCategory = 1 << 5;
     playerTwoLabel.fontSize = playerLabelFontSize;
     playerTwoLabel.alpha = playerLabelAlpha;
     playerTwoLabel.position = CGPointMake(self.screenWidth -  playerLabelIndentation, playerLabelHeight);
+    
+    
+    if(self.hostValue == 0)
+    {
+        playerOneLabel.alpha = 0.75;
+    } else if (self.hostValue == 1)
+    {
+        playerTwoLabel.alpha = 0.75;
+    }
+    
+    
+    [self addChild:playerOneLabel];
     [self addChild:playerTwoLabel];
+    
+    
+    
     
 }
 
@@ -338,6 +358,8 @@ static const uint32_t ceilingCategory = 1 << 5;
             if((self.hostValue == self.localGameStore.theBallServer) || self.hostValue == 2)
             {
                 self.readyToRestart = YES;
+                [GameAndScoreDetails sharedGameDataStore].leftPlayerHits = 0;
+                [GameAndScoreDetails sharedGameDataStore].rightPlayerHits = 0;
             }
             
         });
@@ -352,7 +374,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     UITouch *firstTouch = touches.anyObject;
     
-    if([self shouldBallBeHit:firstTouch] && self.gameInPlay)
+    if([self shouldBallBeHit:firstTouch] && self.allowBallHit)
     {
         [self hitTheVolleyBall:firstTouch];
         //SHOWS WHERE TOUCH HAPPENED
@@ -368,7 +390,11 @@ static const uint32_t ceilingCategory = 1 << 5;
     if(self.gameStopped && self.readyToRestart)
     {
         [self setupSceneAndNodes];
-        [self sendDataToPlayer:CGVectorMake(0, 0) location:self.volleyBall.position updateOrTap:@"restartGame" dataSendMode:MCSessionSendDataReliable];
+        
+        [self sendDataToPlayer:CGVectorMake(0, 0)
+                      location:self.volleyBall.position
+                   updateOrTap:@"restartGame"
+                  dataSendMode:MCSessionSendDataReliable];
     }
     
 }
@@ -405,10 +431,10 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     if (closeToTheBall && shouldHitBall)
     {
-        if(!self.gameInPlay && !self.readyToRestart)
+        if(self.allowBallHit || !self.readyToRestart)
         {
             self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
-            self.gameInPlay = YES;
+            self.allowBallHit = YES;
         }
     }
     
@@ -440,7 +466,11 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     self.volleyBall.physicsBody.velocity = CGVectorMake(0,0); // ball mass is 0.26420798897743225
     [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)]; // bird mass 0.02010619267821312
-    [self sendDataToPlayer:CGVectorMake(xBallVector,yBallVector) location:ballLocation updateOrTap:@"tap" dataSendMode:MCSessionSendDataReliable];
+    [self sendDataToPlayer:CGVectorMake(xBallVector,yBallVector)
+                  location:ballLocation
+               updateOrTap:@"tap"
+              dataSendMode:MCSessionSendDataReliable];
+    
     self.lastTapper = YES;
 }
 
@@ -453,33 +483,36 @@ static const uint32_t ceilingCategory = 1 << 5;
     bool rightSideFall = (contact.bodyA.categoryBitMask == floorCategoryRight || contact.bodyB.categoryBitMask == floorCategoryRight);
     bool netHit = (contact.bodyA.categoryBitMask == fenceCategory || contact.bodyB.categoryBitMask == fenceCategory);
     
+    if(leftSideFall || rightSideFall)
+    {
+        self.lastTapper = NO;
+    }
+    
+    
     if (leftSideFall)
     {
-        if(self.gameInPlay)
+        if(!self.gameStopped)
         {
             [self flashBackgroundScreen:nil];
             [[GameAndScoreDetails sharedGameDataStore] rightPlayerScored];
             [self placeRestartGameButton];
         }
         NSLog(@"Left side Hit");
-        self.gameInPlay = NO;
+        self.gameStopped = YES;
         
     } else if (rightSideFall)
     {
-        if(self.gameInPlay)
+        if(!self.gameStopped)
         {
             [self flashBackgroundScreen:nil];
             [[GameAndScoreDetails sharedGameDataStore] leftPlayerScored];
             [self placeRestartGameButton];
         }
         NSLog(@"Right side Hit");
-        self.gameInPlay = NO;
+        self.gameStopped = YES;
     } else if (netHit)
     {
-        if(self.gameInPlay)
-        {
-            [self flashBackgroundScreen:[SKColor grayColor]];
-        }
+        [self flashBackgroundScreen:[SKColor grayColor]];
         NSLog(@"Net was hit");
     }
     [self updateScoreLabelNode];
@@ -510,28 +543,39 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)dataWasReceived:(NSData *)data
 {
-    if(!self.gameInPlay)
-    {
-        self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
-    }
+
     NSDictionary *gameDictionary = [NSKeyedUnarchiver unarchiveObjectWithData:data];
     NSString *stringVector = gameDictionary[@"vector"];
     NSString *stringPoint = gameDictionary[@"point"];
     NSString *updateOrTap = gameDictionary[@"updateOrTap"];
+    NSNumber *otherLeftScore = gameDictionary[@"leftScore"];
+    NSNumber *otherRightScore = gameDictionary[@"rightScore"];
+    
     CGVector hitVector = CGVectorFromString(stringVector);
     CGPoint ballLocalation = CGPointFromString(stringPoint);
+    
+    if(!self.allowBallHit && [updateOrTap isEqualToString:@"tap"])
+    {
+        self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
+    }
+    
     
     if (self.lastTapper == NO && ![updateOrTap isEqualToString:@"restartGame"])
     {
         [self otherMultiplayerTap:hitVector location:ballLocalation updateOrTap:updateOrTap];
+        
     } else if ([updateOrTap isEqualToString:@"tap"])
     {
         [self otherMultiplayerTap:hitVector location:ballLocalation updateOrTap:updateOrTap];
         self.lastTapper = NO;
     } else if ([updateOrTap isEqualToString:@"restartGame"])
     {
+        [GameAndScoreDetails sharedGameDataStore].leftPlayerScore = otherLeftScore.unsignedIntegerValue;
+        [GameAndScoreDetails sharedGameDataStore].rightPlayerScore = otherRightScore.unsignedIntegerValue;
         [self setupSceneAndNodes];
     }
+    
+    
     
 }
 
@@ -552,7 +596,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)sendDataToPlayer:(CGVector)hitVector
                location:(CGPoint)location
-                   updateOrTap:(NSString *)type
+            updateOrTap:(NSString *)type
            dataSendMode:(MCSessionSendDataMode)dataSendMode
 {
     if (!dataSendMode)
@@ -560,13 +604,15 @@ static const uint32_t ceilingCategory = 1 << 5;
         dataSendMode = MCSessionSendDataReliable;
     }
     
-    if (self.hostValue != 2) // && !self.gameInPlay)
+    if (self.hostValue != 2) // && !self.allowBallHit)
     {
         NSString *stringVector = NSStringFromCGVector(hitVector);
         NSString *stringPoint = NSStringFromCGPoint(location);
         NSDictionary *gameDictionary = @{@"vector" : stringVector,
                                          @"point" : stringPoint,
-                                         @"updateOrTap" : type};
+                                         @"updateOrTap" : type,
+                                         @"leftScore" : @([GameAndScoreDetails sharedGameDataStore].leftPlayerScore),
+                                         @"rightScore": @([GameAndScoreDetails sharedGameDataStore].rightPlayerScore)};
         NSData *sendingData = [NSKeyedArchiver archivedDataWithRootObject:gameDictionary];
         [self.partyTime sendData:sendingData withMode:(dataSendMode) error:nil];
     }
