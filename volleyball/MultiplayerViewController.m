@@ -20,6 +20,7 @@
 @property (nonatomic, assign) CGFloat screenWidth;
 @property (nonatomic, assign) CGFloat screenHeight;
 
+
 @end
 
 @implementation SKScene (Unarchive)
@@ -34,6 +35,7 @@
     NSKeyedUnarchiver *arch = [[NSKeyedUnarchiver alloc] initForReadingWithData:data];
     [arch setClass:self forClassName:@"SKScene"];
     SKScene *scene = [arch decodeObjectForKey:NSKeyedArchiveRootObjectKey];
+    scene.backgroundColor = [UIColor colorWithRed:120 green:182 blue:241 alpha:1];
     [arch finishDecoding];
     
     return scene;
@@ -47,17 +49,18 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-    [self setScreenHeightandWidth];
     
+    [self setScreenHeightandWidth];
+    [self displayButtons];
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(dismissThisViewController:)
                                                  name:@"dismissSelf"
                                                object:nil];
     self.firstConnection = 0;
     self.connectingLabel.text = @"Looking for another player";
-//    self.connectingLabel.text = [NSString stringWithFormat:@"Looking for Player %@",[GameAndScoreDetails sharedGameDataStore].host ? @"1":@"2"];
-    
-    self.partyTime = [[PLPartyTime alloc] initWithServiceType:@"test"];   //@"volleyBallGame"];
+    self.connectingLabel.font = [UIFont fontWithName:@"SpinCycleOT" size:31];
+    self.view.backgroundColor = [UIColor colorWithRed:120 green:182 blue:241 alpha:1];
+    self.partyTime = [[PLPartyTime alloc] initWithServiceType:@"volleyBallGame"];   //@"volleyBallGame"];
     self.partyTime.delegate = self;
     [self.partyTime startAPaty];
     [self.partyTime joinParty];
@@ -73,9 +76,12 @@
 {
     // Configure the view.
     SKView * skView = (SKView *)self.view;
-    skView.showsFPS = YES;
-    skView.showsNodeCount = YES;
+        // debugging
+//    skView.showsFPS = YES;
+//    skView.showsNodeCount = YES;
 //    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
+    
+    
     /* Sprite Kit applies additional optimizations to improve rendering performance */
     skView.ignoresSiblingOrder = YES;
     
@@ -126,8 +132,6 @@
     
     [self.view addSubview:self.backButton];
     
-    NSLog(@"%1f",exitButtonImage.size.height);
-    
     [self.backButton mas_makeConstraints:^(MASConstraintMaker *make) {
         make.left.equalTo(self.view).offset(15);
         make.bottomMargin.equalTo(self.view).offset(-15);
@@ -147,10 +151,12 @@
 
 -(void)buttonClicked:(UIButton *)sender
 {
+
+//    [self.partyTime stopAcceptingGuests];
+    self.delegate = nil;
     self.partyTime.delegate = nil;
-    [self.partyTime stopAcceptingGuests];
     [self.partyTime leaveParty];
-    
+    self.browser = nil;
     
     if([sender.accessibilityLabel isEqualToString:@"backButton"])
     {
@@ -179,6 +185,7 @@
     if(state == 2 && !self.firstConnection)
     {
         self.firstConnection = 1;
+        [self.backButton removeFromSuperview];
         [self loadTheGame];
     } else if (state == 0)
     {
@@ -192,7 +199,8 @@
         
         [self presentViewController:disconnectAlert animated:YES completion:nil];
         [self dismissViewControllerAnimated:YES completion:^{
-            //NO COMPLETION ON THIS
+            id i;
+            [self dismissThisViewController:i];
         }];
     }
     

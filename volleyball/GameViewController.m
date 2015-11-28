@@ -9,6 +9,7 @@
 #import "GameViewController.h"
 #import "GameScene.h"
 #import <Masonry.h>
+#import "GameAndScoreDetails.h"
 
 @implementation SKScene (Unarchive)
 
@@ -34,7 +35,7 @@
 - (void)viewDidLoad
 {
     [super viewDidLoad];
-
+    [[GameAndScoreDetails sharedGameDataStore] resetGame];
     // Configure the view.
     
     
@@ -48,10 +49,12 @@
     
     SKView * skView = (SKView *)self.view;
     
-    
-    skView.showsFPS = YES;
-    skView.showsNodeCount = YES;
+    // debugging
+//    skView.showsFPS = YES;
+//    skView.showsNodeCount = YES;
 //    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
+    
+    
         /* Sprite Kit applies additional optimizations to improve rendering performance */
     skView.ignoresSiblingOrder = YES;
     // Create and configure the scene.

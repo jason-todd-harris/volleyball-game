@@ -24,6 +24,7 @@
 @property (nonatomic, strong) UIButton *singlePlayerButton;
 @property (nonatomic, strong) UIButton *multiplayerButton;
 @property (nonatomic, strong) UIButton *settingsButton;
+@property (nonatomic, strong) UILabel *developedByJasonHarris;
 
 @end
 
@@ -40,6 +41,7 @@
     self.view.backgroundColor = [UIColor colorWithPatternImage:backgroundSlice];
     [self addTitle];
     [self addButtons];
+    [self addDevelopedByJasonHarris];
     
 }
 
@@ -64,6 +66,21 @@
         make.centerX.equalTo(self.view);
         make.centerY.equalTo(self.view).offset(-self.screenHeight/6);
     }];
+}
+
+-(void)addDevelopedByJasonHarris
+{
+    self.developedByJasonHarris = [[UILabel alloc] init];
+    self.developedByJasonHarris.text = @"developed by Jason Harris";
+    self.developedByJasonHarris.textColor = [UIColor whiteColor];
+    self.developedByJasonHarris.alpha = 0.95;
+    self.developedByJasonHarris.font = [UIFont fontWithName:@"Arial Hebrew" size:self.screenHeight / 25];
+    [self.view addSubview:self.developedByJasonHarris];
+    
+    [self.developedByJasonHarris mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.bottom.and.right.equalTo(self.view).offset(-10);
+    }];
+    
 }
 
 

@@ -5,6 +5,7 @@
 
 target 'volleyball' do
 pod 'Masonry'
+pod "Appirater"
 end
 
 target 'volleyballTests' do

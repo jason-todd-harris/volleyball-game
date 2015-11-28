@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import <Appirater.h>
 
 @interface AppDelegate ()
 
@@ -18,11 +19,29 @@
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions {
     // Override point for customization after application launch.
     [GameAndScoreDetails sharedGameDataStore];
-    
-    
-        NSLog(@"SpinCycle3DOT and SpinCycleOT");
+    [Appirater setAppId:@"1062974540"];
+    [Appirater setDaysUntilPrompt:10];
+    [Appirater setUsesUntilPrompt:15];
+    [Appirater setSignificantEventsUntilPrompt:-1];
+    [Appirater setTimeBeforeReminding:5];
+    [Appirater setDebug:NO];
     
     return YES;
+}
+
+-(UIInterfaceOrientationMask)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window
+{
+    /*
+     -(NSUInteger)application:(UIApplication *)application supportedInterfaceOrientationsForWindow:(UIWindow *)window
+     {
+     if(self.restrictRotation)
+     return UIInterfaceOrientationMaskPortrait;
+     else
+     return UIInterfaceOrientationMaskAll;
+     }
+     */
+    
+    return UIInterfaceOrientationMaskLandscape;
 }
 
 - (void)applicationWillResignActive:(UIApplication *)application {

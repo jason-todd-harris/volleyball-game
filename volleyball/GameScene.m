@@ -33,12 +33,13 @@
 
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
 @property (nonatomic, assign) CGFloat screenHeight;
-@property (nonatomic, strong) NSString *gameFontName;
 @property (nonatomic, assign) CGFloat screenWidth;
+@property (nonatomic, strong) NSString *gameFontName;
 @property (nonatomic, assign) NSUInteger hostValue;
 @property (nonatomic, strong) NSString *gameScore;
 @property (nonatomic, strong) GameAndScoreDetails *localGameStore;
 @property (nonatomic, assign) NSUInteger allowableHits;
+@property (nonatomic, strong) NSString *whoShouldTap;
 
 //SETTINGS
 @property (nonatomic, assign) CGFloat ballDepthInSand;
@@ -64,12 +65,15 @@ static const uint32_t ceilingCategory = 1 << 5;
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
     [self setScreenHeightandWidth];
+    self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
+    [[GameAndScoreDetails sharedGameDataStore] resetGame];
+    [GameAndScoreDetails sharedGameDataStore].host = self.hostValue;
     self.gameFontName = @"SpinCycleOT";
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
     self.ballDepthInSand = self.screenHeight / 100;
     self.gravityValue = -2.5;
-    self.allowableHits = 4;
+    self.allowableHits = 3;
     self.lastTapper = NO;
     self.frameCounter = 0;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
@@ -97,7 +101,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
     
-    if (self.lastTapper && self.frameCounter >3)
+    if (self.lastTapper && self.frameCounter >2)
     {
         CGVector ballVector = self.volleyBall.physicsBody.velocity;
         [self sendDataToPlayer:ballVector
@@ -192,7 +196,8 @@ static const uint32_t ceilingCategory = 1 << 5;
     SKShapeNode *fenceShapeNode = [SKShapeNode shapeNodeWithRectOfSize:fenceSize cornerRadius:7];
     fenceShapeNode.fillColor = [SKColor whiteColor];
     fenceShapeNode.position = CGPointMake(self.screenWidth / 2.0, self.screenHeight / 3.0);
-    fenceShapeNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:fenceSize];
+    CGSize smallerRectangle = CGSizeMake(fenceSize.width-3, fenceSize.height);
+    fenceShapeNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:smallerRectangle];
     fenceShapeNode.physicsBody.categoryBitMask = fenceCategory;
     fenceShapeNode.physicsBody.contactTestBitMask = ballCategory;
     fenceShapeNode.physicsBody.dynamic = NO;
@@ -297,8 +302,8 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     CGFloat playerLabelFontSize = self.screenHeight / 10;
     CGFloat playerLabelHeight = self.screenHeight - self.screenHeight / 10;
-    CGFloat playerLabelIndentation = self.screenWidth / 7;
-    CGFloat playerLabelAlpha = 0.25;
+    CGFloat playerLabelIndentation = self.screenWidth / 5;
+    CGFloat playerLabelAlpha = 0.75;
     
     SKLabelNode *playerOneLabel = [SKLabelNode labelNodeWithFontNamed:self.gameFontName];
     playerOneLabel.zPosition = 1;
@@ -320,10 +325,10 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     if(self.hostValue == 0)
     {
-        playerOneLabel.alpha = 0.75;
+        playerTwoLabel.alpha = 0.25;
     } else if (self.hostValue == 1)
     {
-        playerTwoLabel.alpha = 0.75;
+        playerOneLabel.alpha = 0.25;
     }
     
     
@@ -340,13 +345,24 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     self.gameStopped = YES;
     dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1.0 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        
+        if([GameAndScoreDetails sharedGameDataStore].theBallServer)
+        {
+            self.whoShouldTap = @"PLAYER 2 - ";
+        } else
+        {
+            self.whoShouldTap = @"PLAYER 1 - ";
+        }
+        
+        
+        
         self.restartButton = [SKLabelNode labelNodeWithFontNamed:@"SpinCycleOT"];
         self.restartButton.position = CGPointMake(self.frame.size.width/2,self.frame.size.height * 2.75 / 4);
         self.restartButton.zPosition = 100;
-        self.restartButton.text = [NSString stringWithFormat:@"TAP TO RESET SERVE"];
+        self.restartButton.text = [NSString stringWithFormat:@"%@TAP TO RESET SERVE",self.whoShouldTap];
         self.restartButton.name = @"resetGameNode";
         self.restartButton.fontColor = [SKColor whiteColor];
-        self.restartButton.fontSize = self.screenWidth / 14.0;
+        self.restartButton.fontSize = self.screenWidth / 18.0;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
             if((self.hostValue == self.localGameStore.theBallServer) || self.hostValue == 2)
             {
@@ -375,6 +391,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         [self.view presentScene:nil];
         [[NSNotificationCenter defaultCenter] postNotificationName:@"dismissSelf"
                                                             object:self];
+        [[GameAndScoreDetails sharedGameDataStore] resetGame];
         
     }
     
@@ -432,7 +449,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
     }
     
-    bool closeToTheBall = (ABS(xDistance) < heightVolleyball*1.5) && (ABS(yDistance) < heightVolleyball*1.5);
+    bool closeToTheBall = (ABS(xDistance) < heightVolleyball*2.0) && (ABS(yDistance) < heightVolleyball*2.0);
     
     
     if (closeToTheBall && shouldHitBall)
@@ -569,6 +586,8 @@ static const uint32_t ceilingCategory = 1 << 5;
     if (self.lastTapper == NO && ![updateOrTap isEqualToString:@"restartGame"])
     {
         [self otherMultiplayerTap:hitVector location:ballLocalation updateOrTap:updateOrTap];
+        [GameAndScoreDetails sharedGameDataStore].leftPlayerHits = 0;
+        [GameAndScoreDetails sharedGameDataStore].rightPlayerHits = 0;
         
     } else if ([updateOrTap isEqualToString:@"tap"])
     {

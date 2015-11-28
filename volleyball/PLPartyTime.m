@@ -106,10 +106,10 @@
 - (void)leaveParty
 {
   [self stopAcceptingGuests];
-  [self.session disconnect];
+  [_session disconnect]; //NOT SURE WHY THIS WORKS BUT IT DOES, CAN'T USE self.session
   // Must nil out these because if we try to reconnect, we need to recreate them
   // Else it fails to connect
-  self.session = nil;
+  _session = nil;
   self.peerID = nil;
   self.advertiser = nil;
   self.browser = nil;
