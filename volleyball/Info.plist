@@ -27,8 +27,6 @@
 		<string>spincycle_3d_ot.otf</string>
 		<string>spincycle_ot.otf</string>
 	</array>
-	<key>UILaunchStoryboardName</key>
-	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
 	<string>Main</string>
 	<key>UIRequiredDeviceCapabilities</key>

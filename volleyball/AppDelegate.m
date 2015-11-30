@@ -26,6 +26,9 @@
     [Appirater setTimeBeforeReminding:5];
     [Appirater setDebug:NO];
     
+    //http://stackoverflow.com/questions/29210885/error-itms-90096-your-binary-is-not-optimized-for-iphone-5
+    //website to get it working on 7 and below
+    
     return YES;
 }
 
