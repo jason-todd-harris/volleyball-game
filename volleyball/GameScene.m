@@ -155,6 +155,9 @@ static const uint32_t ceilingCategory = 1 << 5;
     //SET UP PLAYER NAME LABELS
     [self setUpPlayerNames];
     
+    
+    [self exitGameButton];
+    
     self.allowBallHit = NO;
     
 }
@@ -373,7 +376,6 @@ static const uint32_t ceilingCategory = 1 << 5;
             
         });
         [self addChild:self.restartButton];
-        [self exitGameButton];
     });
 }
 
@@ -637,7 +639,7 @@ static const uint32_t ceilingCategory = 1 << 5;
                                          @"point" : stringPoint,
                                          @"updateOrTap" : type,
                                          @"leftScore" : @([GameAndScoreDetails sharedGameDataStore].leftPlayerScore),
-                                         @"rightScore": @([GameAndScoreDetails sharedGameDataStore].rightPlayerScore)};
+                                         @"rightScore" : @([GameAndScoreDetails sharedGameDataStore].rightPlayerScore)};
         NSData *sendingData = [NSKeyedArchiver archivedDataWithRootObject:gameDictionary];
         [self.partyTime sendData:sendingData withMode:(dataSendMode) error:nil];
     }
