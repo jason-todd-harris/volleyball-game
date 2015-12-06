@@ -71,7 +71,7 @@
 -(void)addDevelopedByJasonHarris
 {
     self.developedByJasonHarris = [[UILabel alloc] init];
-    self.developedByJasonHarris.text = @"developed by Jason Harris";
+    self.developedByJasonHarris.text = @"Developed by Jason Harris";
     self.developedByJasonHarris.textColor = [UIColor whiteColor];
     self.developedByJasonHarris.alpha = 0.95;
     self.developedByJasonHarris.font = [UIFont fontWithName:@"Arial Hebrew" size:self.screenHeight / 25];

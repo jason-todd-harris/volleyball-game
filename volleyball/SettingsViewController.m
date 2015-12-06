@@ -109,7 +109,7 @@
 {
     
     self.settingsText = [[UILabel alloc] init];
-    self.settingsText.text = @"In order to hit the ball, tap the side opposite of where you want the ball to travel, do not swipe. If you want to hit up, tap below the ball, if you want to hit right, tap left of the ball. \n \n Multiplayer will work with both Bluetooth and WiFi. For best performance please turn off Bluetooth and use only WiFi. The phones will connect if they are both have Wifi on or are on the same WiFi network. \n \n This app was created by Jason Harris.  Please email me any comments or suggestions at jason.harris.coding@gmail.com. \n \n Thank you to all friends and family who supported me and allowed me to bounce ideas off them";
+    self.settingsText.text = @"In order to hit the ball, tap the side opposite of where you want the ball to travel, do not swipe. If you want to hit up, tap below the ball, if you want to hit right, tap left of the ball. \n \n Multiplayer will work with both Bluetooth and WiFi. For best performance please turn off Bluetooth and use only WiFi. The phones will connect if they are both have Wifi on or are on the same WiFi network. \n \n This app was created by Jason Harris.  Please email me any comments or suggestions at jason.harris.coding@gmail.com. \n \n Thank you to all friends and family who supported me and allowed me to bounce ideas off them.";
     self.settingsText.textColor = [UIColor whiteColor];
     self.settingsText.font = [UIFont fontWithName:@"Arial Hebrew" size:self.screenHeight / 23];
     self.settingsText.lineBreakMode = NSLineBreakByWordWrapping;
@@ -129,14 +129,15 @@
 -(void)addDevelopedByJasonHarris
 {
     self.developedByJasonHarris = [[UILabel alloc] init];
-    self.developedByJasonHarris.text = @"developed by Jason Harris";
+    self.developedByJasonHarris.text = @"Developed by Jason Harris";
     self.developedByJasonHarris.textColor = [UIColor whiteColor];
     self.developedByJasonHarris.alpha = 0.95;
     self.developedByJasonHarris.font = [UIFont fontWithName:@"Arial Hebrew" size:self.screenHeight / 25];
     [self.view addSubview:self.developedByJasonHarris];
     
     [self.developedByJasonHarris mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.bottom.and.right.equalTo(self.view).offset(-10);
+        make.right.equalTo(self.view).offset(-10);
+        make.centerY.equalTo(self.backButton);
     }];
     
 }

@@ -670,7 +670,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.backButton.position = CGPointMake(self.backButton.frame.size.height*2/3,self.backButton.frame.size.height*2/3);
     self.backButton.zPosition = 102;
     self.backButton.name = @"exitButtonNode";
-    self.backButton.alpha = 0.75;
+    self.backButton.alpha = 0.90;
     [self addChild:self.backButton];
     
     SKAction *rotate = [SKAction rotateByAngle:M_PI duration:0];
