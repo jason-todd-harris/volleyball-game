@@ -14,6 +14,7 @@
 //NODES AND SPRITES
 @property (nonatomic, strong) SKShapeNode *showsTouchPoint;
 @property (nonatomic, strong) SKSpriteNode *volleyBall;
+@property (nonatomic, strong) SKShapeNode *fenceShapeNode;
 @property (nonatomic, strong) SKNode *groundNodeLeft;
 @property (nonatomic, strong) SKNode *groundNodeRight;
 @property (nonatomic, strong) SKNode *wallNodeOne;
@@ -23,7 +24,6 @@
 @property (nonatomic, strong) SKNode *backButton;
 
 //DEBUG NODES
-@property (nonatomic, assign) bool debugMode;
 @property (nonatomic, strong) SKLabelNode *ballPositionLabel;
 @property (nonatomic, strong) SKLabelNode *heightWidthLabel;
 
@@ -37,24 +37,32 @@
 @property (nonatomic, assign) bool lastTapper;
 @property (nonatomic, assign) bool computerToHit;
 @property (nonatomic, assign) NSUInteger consecutiveAIHits;
+@property (nonatomic, assign) NSUInteger allowableHits;
+@property (nonatomic, assign) NSUInteger frameCounter;
 
-//@property (nonatomic, assign) bool allowReceivingData;
+//GAME VALUES
+@property (nonatomic, strong) NSString *gameScore;
+@property (nonatomic, strong) GameAndScoreDetails *localGameStore;
+@property (nonatomic, strong) NSString *whoShouldTap;
+@property (nonatomic, assign) NSUInteger hostValue;
 
+//SIZE AND FORMATTING
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
 @property (nonatomic, assign) CGFloat screenHeight;
 @property (nonatomic, assign) CGFloat screenWidth;
 @property (nonatomic, strong) NSString *gameFontName;
-@property (nonatomic, assign) NSUInteger hostValue;
-@property (nonatomic, strong) NSString *gameScore;
-@property (nonatomic, strong) GameAndScoreDetails *localGameStore;
-@property (nonatomic, assign) NSUInteger allowableHits;
-@property (nonatomic, strong) NSString *whoShouldTap;
+@property (nonatomic, strong) SKColor *skyColor;
+
 
 //SETTINGS
 @property (nonatomic, assign) CGFloat ballDepthInSand;
 @property (nonatomic, assign) CGFloat gravityValue;
-@property (nonatomic, assign) NSUInteger frameCounter;
-@property (nonatomic, strong) SKColor *skyColor;
+@property (nonatomic, assign) CGFloat fenceSizeRatio;
+@property (nonatomic, assign) CGFloat strikingForce;
+@property (nonatomic, assign) CGFloat waitTime;
+
+
+
 
 @end
 
@@ -75,7 +83,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     /* Setup your scene here */
     [self setScreenHeightandWidth];
     self.computerToHit = YES;
-    self.debugMode = YES;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     [[GameAndScoreDetails sharedGameDataStore] resetGame];
     [GameAndScoreDetails sharedGameDataStore].host = self.hostValue;
@@ -91,9 +98,11 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
     self.ballDepthInSand = self.screenHeight / 100;
-    self.gravityValue = -2.5;
+    self.gravityValue =  -2.5; // v1.0 was -2.5;
+    self.fenceSizeRatio = 2.125;
     self.allowableHits = 3;
     self.lastTapper = NO;
+    self.strikingForce = 90; // v1.0 was 90;
     self.frameCounter = 0;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
@@ -140,9 +149,12 @@ static const uint32_t ceilingCategory = 1 << 5;
         [self actionFromAI];
     }
     
-    if (self.debugMode)
+    if ([GameAndScoreDetails sharedGameDataStore].debug)
     {
         self.ballPositionLabel.text = [NSString stringWithFormat:@"x: %.0f y: %.0f",self.volleyBall.position.x , self.volleyBall.position.y];
+        self.gravityValue = [GameAndScoreDetails sharedGameDataStore].debugGravity;
+        self.strikingForce = [GameAndScoreDetails sharedGameDataStore].debugForce;
+        self.waitTime = [GameAndScoreDetails sharedGameDataStore].debugWaitTime;
     }
     
 }
@@ -155,16 +167,17 @@ static const uint32_t ceilingCategory = 1 << 5;
     __block CGFloat ballHeight = self.volleyBall.position.y;
     __block bool correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
     __block bool ballOnTheScreen = (self.frame.size.height >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
-    __block bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+    __block bool lessThanThreeHits = (self.consecutiveAIHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
     __block bool shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
+    
     if (shouldHitBall && (self.consecutiveAIHits < 4))
     {
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime* NSEC_PER_SEC)), dispatch_get_main_queue(), ^{  //TIME TO WAIT FOR HIT
             ballCourtSide = self.volleyBall.position.x;
             ballHeight = self.volleyBall.position.y;
             correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
             ballOnTheScreen = (self.frame.size.height >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
-            lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+            lessThanThreeHits = (self.consecutiveAIHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
             shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
             if (shouldHitBall && self.computerToHit)
             {
@@ -172,7 +185,7 @@ static const uint32_t ceilingCategory = 1 << 5;
                 self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
                 [self computerHitBall:ballHit];
                 self.computerToHit = NO;
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
                     self.computerToHit = YES;
                 });
             }
@@ -183,9 +196,25 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)computerHitBall:(UITouch *)firstTouch
 {
+    CGFloat fenceTop = self.fenceShapeNode.frame.origin.y + self.fenceShapeNode.frame.size.height;
+    CGFloat fenceAndVolleyball = fenceTop + self.volleyBall.size.height / 2;
     CGPoint ballLocation = self.volleyBall.position;
-    CGPoint touchLocation = pointAI(ballLocation, 1,-1);
-    CGFloat forceHit = 90;
+    CGFloat groundWithBall = self.groundNodeLeft.position.y + self.volleyBall.size.height / 2;
+    
+    CGFloat fenceDistanceToTop = self.screenHeight - fenceAndVolleyball;
+    CGFloat volleyballDistanceToTop = self.screenHeight - self.volleyBall.position.y;
+    
+    
+    CGPoint touchLocation = pointAI(ballLocation, 1,1); // WILL PUT STUFF HERE
+    
+    //WITH DEBUG ON
+    if([GameAndScoreDetails sharedGameDataStore].debug)
+    {
+        touchLocation = pointAI(ballLocation, [GameAndScoreDetails sharedGameDataStore].xComputerStrike, [GameAndScoreDetails sharedGameDataStore].yComputerStrike);
+    }
+    
+    CGFloat forceHit = self.strikingForce;
+    
     CGPoint pointForRatio = pointSubtract(touchLocation, ballLocation);
     CGFloat xBallVector = forceHit * (pointForRatio.x / -ABS(pointForRatio.y));
     xBallVector = constrainFloat(-forceHit, forceHit, xBallVector);
@@ -240,7 +269,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     [self setUpPlayerNames];
     
     //SET UP DEBUG NODES
-    if (self.debugMode)
+    if ([GameAndScoreDetails sharedGameDataStore].debug)
     {
         [self setUpDebugNodes];
         self.heightWidthLabel.text = [NSString stringWithFormat:@"width: %.0f height: %.0f", self.screenWidth , self.screenHeight];
@@ -284,18 +313,18 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)setUpFenceNodes
 {
-    CGSize fenceSize = CGSizeMake(10, self.screenHeight/2.125);
-    SKShapeNode *fenceShapeNode = [SKShapeNode shapeNodeWithRectOfSize:fenceSize cornerRadius:7];
-    fenceShapeNode.fillColor = [SKColor whiteColor];
-    fenceShapeNode.position = CGPointMake(self.screenWidth / 2.0, self.screenHeight / 3.0);
+    CGSize fenceSize = CGSizeMake(10, self.screenHeight/self.fenceSizeRatio);
+    self.fenceShapeNode = [SKShapeNode shapeNodeWithRectOfSize:fenceSize cornerRadius:7];
+    self.fenceShapeNode.fillColor = [SKColor whiteColor];
+    self.fenceShapeNode.position = CGPointMake(self.screenWidth / 2.0, self.screenHeight / 3.0);
     CGSize smallerRectangle = CGSizeMake(fenceSize.width-3, fenceSize.height);
-    fenceShapeNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:smallerRectangle];
-    fenceShapeNode.physicsBody.categoryBitMask = fenceCategory;
-    fenceShapeNode.physicsBody.contactTestBitMask = ballCategory;
-    fenceShapeNode.physicsBody.dynamic = NO;
-    fenceShapeNode.physicsBody.allowsRotation = NO;
-    fenceShapeNode.zPosition = 5;
-    [self addChild:fenceShapeNode];
+    self.fenceShapeNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:smallerRectangle];
+    self.fenceShapeNode.physicsBody.categoryBitMask = fenceCategory;
+    self.fenceShapeNode.physicsBody.contactTestBitMask = ballCategory;
+    self.fenceShapeNode.physicsBody.dynamic = NO;
+    self.fenceShapeNode.physicsBody.allowsRotation = NO;
+    self.fenceShapeNode.zPosition = 5;
+    [self addChild:self.fenceShapeNode];
 }
 
 
@@ -594,7 +623,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     CGPoint ballLocation = self.volleyBall.position;
     CGPoint touchLocation = [firstTouch locationInNode:self];
-    CGFloat forceHit = 90;
+    CGFloat forceHit = self.strikingForce;
     
     CGPoint pointForRatio = pointSubtract(touchLocation, ballLocation);
     CGFloat xBallVector = forceHit * (pointForRatio.x / -ABS(pointForRatio.y));

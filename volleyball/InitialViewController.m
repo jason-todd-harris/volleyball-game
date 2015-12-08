@@ -31,6 +31,14 @@
 
 @property (nonatomic, strong) UILabel *developedByJasonHarris;
 
+//DEBUG ONES
+@property (nonatomic, strong) UITextField *xDebugValue;
+@property (nonatomic, strong) UITextField *yDebugValue;
+@property (nonatomic, strong) UITextField *debugGravity;
+@property (nonatomic, strong) UITextField *debugForce;
+@property (nonatomic, strong) UITextField *debugWaitTime;
+@property (nonatomic, strong) UISwitch *debugModeSwitch;
+
 @end
 
 @implementation InitialViewController
@@ -48,7 +56,15 @@
     [self addButtons];
     [self addDevelopedByJasonHarris];
     
+    
+    [GameAndScoreDetails sharedGameDataStore].debug = YES;
+    if ([GameAndScoreDetails sharedGameDataStore].debug)
+    {
+        [self debugStuff];
+    }
 }
+
+
 
 -(void)setScreenHeightandWidth
 {
@@ -61,7 +77,7 @@
 {
     self.beachVolleyballLabel = [[UILabel alloc] init];
     
-    self.beachVolleyballLabel.font = [UIFont fontWithName:@"SpinCycleOT" size:self.screenWidth / 14.0];
+    self.beachVolleyballLabel.font = [UIFont fontWithName:@"SpinCycleOT" size:self.screenWidth / 12.0];
     self.beachVolleyballLabel.text = @"BEACH VOLLEYBALL";
     self.beachVolleyballLabel.textColor = [UIColor whiteColor];
     
@@ -138,7 +154,9 @@
         make.centerY.equalTo(self.view).offset(buttonOffsetDown);
     }];
     
-    //COMPUTER BUTTON
+    
+    
+    //COMPUTER SLIDER BUTTON
     self.sliderOff = [UIImage imageNamed:@"beachvolleyball-sliderOff"];
     self.sliderOff = [UIImage imageWithCGImage:self.sliderOff.CGImage scale:sizeRatio/0.75 orientation:self.sliderOff.imageOrientation];
     self.sliderOn = [UIImage imageNamed:@"beachvolleyball-sliderOn"];
@@ -151,9 +169,25 @@
     
     [self.computerButton mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(self.singlePlayerButton);
-        NSLog(@"%ld",(long)self.singlePlayerButton.mas_height.isSizeAttribute);
         make.centerY.equalTo(self.singlePlayerButton).offset(singlePlayerImage.size.height * 0.75);
     }];
+    
+    //LABEL - VS COMPUTER OPPONET
+    UILabel *computerOpponent = [[UILabel alloc] init];
+    computerOpponent.text = @"vs computer";
+    computerOpponent.textColor = [UIColor whiteColor];
+    computerOpponent.alpha = 0.95;
+    computerOpponent.font = [UIFont fontWithName:@"SpinCycleOT" size:self.screenHeight / 15];
+    [self.view addSubview:computerOpponent];
+    
+    [computerOpponent mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.equalTo(self.computerButton);
+        make.top.equalTo(self.computerButton.mas_bottom).offset(10);
+    }];
+    
+    
+    
+    
     
     NSArray *buttonArray = @[self.singlePlayerButton, self.multiplayerButton, self.settingsButton, self.computerButton];
     for (UIButton *button in buttonArray) {
@@ -161,20 +195,28 @@
                    action:@selector(buttonClicked:)
          forControlEvents:UIControlEventTouchUpInside];
     }
+
 }
 
 
 -(void)buttonClicked:(UIButton *)sendingButton
 {
     UIStoryboard *sb = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
-    if([sendingButton.accessibilityLabel isEqualToString:@"singlePlayer"])
+    if([sendingButton isEqual:self.singlePlayerButton])
     {
+        [GameAndScoreDetails sharedGameDataStore].xComputerStrike = self.xDebugValue.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].yComputerStrike = self.yDebugValue.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debugGravity = self.debugGravity.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debugForce = self.debugForce.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debugWaitTime = self.debugWaitTime.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debug = self.debugModeSwitch.isOn;
+        
         GameViewController *newGame = [sb instantiateViewControllerWithIdentifier:@"GameViewController"];
         [self presentViewController:newGame animated:YES completion:^{
             //completion
         }];
         
-    } else if ([sendingButton.accessibilityLabel isEqualToString:@"multiPlayer"])
+    } else if ([sendingButton isEqual:self.multiplayerButton])
     {
         [[GameAndScoreDetails sharedGameDataStore] resetGame];
         [GameAndScoreDetails sharedGameDataStore].host = self.hostSwitch.selectedSegmentIndex;
@@ -184,7 +226,7 @@
             //completion
         }];
         
-    } else if ([sendingButton.accessibilityLabel isEqualToString:@"settings"])
+    } else if ([sendingButton isEqual:self.settingsButton])
     {
         
         CATransition *transition = [CATransition animation];
@@ -239,6 +281,77 @@
     {
         [GameAndScoreDetails sharedGameDataStore].host = self.hostSwitch.selectedSegmentIndex;
     }
+}
+
+
+#pragma mark - debug stuff
+
+-(void)debugStuff
+{
+    
+    self.yDebugValue = [[UITextField alloc] init];
+    self.yDebugValue.placeholder = @"y hit value";
+    
+    self.xDebugValue = [[UITextField alloc] init];
+    self.xDebugValue.placeholder = @"x hit value";
+    
+    self.debugForce = [[UITextField alloc] init];
+    self.debugForce.placeholder = @"hit force";
+    self.debugForce.text = @"90";
+    
+    self.debugGravity = [[UITextField alloc] init];
+    self.debugGravity.placeholder = @"gravity";
+    self.debugGravity.text = @"-2.50";
+    
+    self.debugWaitTime = [[UITextField alloc] init];
+    self.debugWaitTime.placeholder = @"wait time";
+    self.debugWaitTime.text = @"1";
+    
+    
+    
+    NSArray *debugThingArray = @[self.debugWaitTime, self.yDebugValue,self.xDebugValue,self.debugForce,self.debugGravity];
+    UIView *previousThing = self.singlePlayerButton;
+    __block bool firstOne = YES;
+    for (UITextField *textField in debugThingArray) {
+        
+        CGFloat fontSizeThing = self.screenHeight / 20;
+        textField.font = [UIFont fontWithName:@"Arial Hebrew" size:fontSizeThing];
+        [self.view addSubview:textField];
+        
+        
+        CGFloat grayNESS = 0.9;
+        textField.backgroundColor = [[UIColor alloc] initWithRed:grayNESS green:grayNESS blue:grayNESS alpha:1];
+        textField.borderStyle = UITextBorderStyleRoundedRect;
+        textField.textAlignment = NSTextAlignmentCenter;
+        
+        [textField mas_makeConstraints:^(MASConstraintMaker *make) {
+            make.height.equalTo(@(fontSizeThing*1.25));
+            make.width.equalTo(@90);
+            make.right.equalTo(self.singlePlayerButton.mas_left);
+            if(firstOne)
+            {
+                make.bottom.equalTo(self.singlePlayerButton.mas_bottom).offset(-10);
+                firstOne = NO;
+            } else
+            {
+                make.bottom.equalTo(previousThing.mas_top).offset(-fontSizeThing);
+            }
+            
+            
+        }];
+        
+        previousThing = textField;
+    }
+    
+    self.debugModeSwitch = [[UISwitch alloc] init];
+    self.debugModeSwitch.on = YES;
+    [self.view addSubview:self.debugModeSwitch];
+    [self.debugModeSwitch mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.top.equalTo(self.debugWaitTime.mas_bottom).offset(10);
+        make.centerX.equalTo(self.debugWaitTime);
+    }];
+    
+    
 }
 
 @end

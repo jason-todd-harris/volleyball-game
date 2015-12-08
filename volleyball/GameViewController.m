@@ -50,9 +50,12 @@
     SKView * skView = (SKView *)self.view;
     
     // debugging
-//    skView.showsFPS = YES;
-//    skView.showsNodeCount = YES;
-//    skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
+    if([GameAndScoreDetails sharedGameDataStore].debug)
+    {
+        skView.showsFPS = YES;
+        skView.showsNodeCount = YES;
+        skView.showsPhysics = YES; // CAN SLOW DOWN AND CRASH
+    }
     
     
         /* Sprite Kit applies additional optimizations to improve rendering performance */

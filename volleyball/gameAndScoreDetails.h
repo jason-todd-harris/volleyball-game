@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import <UIKit/UIKit.h>
 
 @interface GameAndScoreDetails : NSObject
 
@@ -24,7 +25,16 @@ typedef NS_ENUM (NSUInteger, ballServer) {
 @property (nonatomic, assign) NSUInteger host;
 @property (nonatomic, assign) NSUInteger server;
 @property (nonatomic, readonly) ballServer theBallServer;
+
+
 @property (nonatomic, assign) bool computerPlayer;
+@property (nonatomic, assign) bool debug;
+@property (nonatomic, assign) CGFloat yComputerStrike;
+@property (nonatomic, assign) CGFloat xComputerStrike;
+@property (nonatomic, assign) CGFloat debugGravity;
+@property (nonatomic, assign) CGFloat debugForce;
+@property (nonatomic, assign) CGFloat debugWaitTime;
+
 
 
 // constants for who has the serve
