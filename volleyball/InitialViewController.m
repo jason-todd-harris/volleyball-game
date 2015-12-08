@@ -24,6 +24,11 @@
 @property (nonatomic, strong) UIButton *singlePlayerButton;
 @property (nonatomic, strong) UIButton *multiplayerButton;
 @property (nonatomic, strong) UIButton *settingsButton;
+@property (nonatomic, strong) UIButton *computerButton;
+
+@property (nonatomic, strong) UIImage *sliderOff;
+@property (nonatomic, strong) UIImage *sliderOn;
+
 @property (nonatomic, strong) UILabel *developedByJasonHarris;
 
 @end
@@ -133,7 +138,24 @@
         make.centerY.equalTo(self.view).offset(buttonOffsetDown);
     }];
     
-    NSArray *buttonArray = @[self.singlePlayerButton, self.multiplayerButton, self.settingsButton];
+    //COMPUTER BUTTON
+    self.sliderOff = [UIImage imageNamed:@"beachvolleyball-sliderOff"];
+    self.sliderOff = [UIImage imageWithCGImage:self.sliderOff.CGImage scale:sizeRatio/0.75 orientation:self.sliderOff.imageOrientation];
+    self.sliderOn = [UIImage imageNamed:@"beachvolleyball-sliderOn"];
+    self.sliderOn = [UIImage imageWithCGImage:self.sliderOn.CGImage scale:sizeRatio/0.75 orientation:self.sliderOff.imageOrientation];
+    self.computerButton = [[UIButton alloc] init];
+    self.computerButton.accessibilityLabel = @"noComputer";
+    [self.computerButton setImage:self.sliderOff forState:UIControlStateNormal];
+    
+    [self.view addSubview:self.computerButton];
+    
+    [self.computerButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerX.equalTo(self.singlePlayerButton);
+        NSLog(@"%ld",(long)self.singlePlayerButton.mas_height.isSizeAttribute);
+        make.centerY.equalTo(self.singlePlayerButton).offset(singlePlayerImage.size.height * 0.75);
+    }];
+    
+    NSArray *buttonArray = @[self.singlePlayerButton, self.multiplayerButton, self.settingsButton, self.computerButton];
     for (UIButton *button in buttonArray) {
         [button addTarget:self
                    action:@selector(buttonClicked:)
@@ -176,6 +198,20 @@
         [self presentViewController:settingsVC animated:NO completion:^{
             //completion
         }];
+    } else if ([sendingButton isEqual:self.computerButton])
+    {
+        if ([self.computerButton.accessibilityLabel isEqualToString:@"noComputer"])
+        {
+            self.computerButton.accessibilityLabel = @"yesComputer";
+            [self.computerButton setImage:self.sliderOn forState:UIControlStateNormal];
+            [GameAndScoreDetails sharedGameDataStore].computerPlayer = YES;
+        } else
+        {
+            self.computerButton.accessibilityLabel = @"noComputer";
+            [self.computerButton setImage:self.sliderOff forState:UIControlStateNormal];
+            [GameAndScoreDetails sharedGameDataStore].computerPlayer = NO;
+        }
+        
     }
     
 }
@@ -201,11 +237,8 @@
     [[GameAndScoreDetails sharedGameDataStore] resetGame];
     if ([sender isEqual:self.multiplayerClicked])
     {
-//        MultiplayerViewController *vc = [segue destinationViewController];
         [GameAndScoreDetails sharedGameDataStore].host = self.hostSwitch.selectedSegmentIndex;
     }
-
-    
 }
 
 @end

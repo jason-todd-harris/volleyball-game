@@ -10,7 +10,7 @@
 #import <SpriteKit/SpriteKit.h>
 
 @interface GameViewController : UIViewController
-
+@property (nonatomic, assign) bool computerAI;
 
 
 @end

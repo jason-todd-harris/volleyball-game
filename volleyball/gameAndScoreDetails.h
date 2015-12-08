@@ -24,6 +24,7 @@ typedef NS_ENUM (NSUInteger, ballServer) {
 @property (nonatomic, assign) NSUInteger host;
 @property (nonatomic, assign) NSUInteger server;
 @property (nonatomic, readonly) ballServer theBallServer;
+@property (nonatomic, assign) bool computerPlayer;
 
 
 // constants for who has the serve

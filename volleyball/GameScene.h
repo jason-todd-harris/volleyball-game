@@ -13,6 +13,7 @@
 @interface GameScene : SKScene
 @property (nonatomic, strong) PLPartyTime *partyTime;
 @property (nonatomic, strong) MultiplayerViewController *multiPlayerVC;
+@property (nonatomic, assign) bool computerAI;
 
 
 

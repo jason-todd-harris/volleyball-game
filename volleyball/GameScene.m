@@ -22,6 +22,12 @@
 @property (nonatomic, strong) SKLabelNode *restartButton;
 @property (nonatomic, strong) SKNode *backButton;
 
+//DEBUG NODES
+@property (nonatomic, assign) bool debugMode;
+@property (nonatomic, strong) SKLabelNode *ballPositionLabel;
+@property (nonatomic, strong) SKLabelNode *heightWidthLabel;
+
+
 //TRACKING VALUES (TOO MANY OF THESE)
 @property (nonatomic, assign) bool allowBallHit; //GAME IN PLAY
 @property (nonatomic, assign) bool gameStopped; //GAME STOPPED
@@ -29,6 +35,9 @@
 
 @property (nonatomic, assign) bool isMultiplayer;
 @property (nonatomic, assign) bool lastTapper;
+@property (nonatomic, assign) bool computerToHit;
+@property (nonatomic, assign) NSUInteger consecutiveAIHits;
+
 //@property (nonatomic, assign) bool allowReceivingData;
 
 @property (nonatomic, assign) CGFloat screenSizeMultiplier;
@@ -65,9 +74,19 @@ static const uint32_t ceilingCategory = 1 << 5;
 -(void)didMoveToView:(SKView *)view {
     /* Setup your scene here */
     [self setScreenHeightandWidth];
+    self.computerToHit = YES;
+    self.debugMode = YES;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     [[GameAndScoreDetails sharedGameDataStore] resetGame];
     [GameAndScoreDetails sharedGameDataStore].host = self.hostValue;
+    if([GameAndScoreDetails sharedGameDataStore].computerPlayer && self.hostValue == 2)
+    {
+        self.computerAI = YES;
+    } else
+    {
+        self.computerAI = NO;
+    }
+    
     self.gameFontName = @"SpinCycleOT";
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
@@ -98,6 +117,8 @@ static const uint32_t ceilingCategory = 1 << 5;
 }
 
 
+#pragma mark - EACH FRAME
+
 -(void)update:(CFTimeInterval)currentTime {
     /* Called before each frame is rendered */
     
@@ -113,8 +134,71 @@ static const uint32_t ceilingCategory = 1 << 5;
     }
     
     self.frameCounter ++;
+    
+    if (self.computerAI)
+    {
+        [self actionFromAI];
+    }
+    
+    if (self.debugMode)
+    {
+        self.ballPositionLabel.text = [NSString stringWithFormat:@"x: %.0f y: %.0f",self.volleyBall.position.x , self.volleyBall.position.y];
+    }
+    
 }
 
+#pragma mark - AI setup
+
+-(void)actionFromAI
+{
+    __block CGFloat ballCourtSide = self.volleyBall.position.x;
+    __block CGFloat ballHeight = self.volleyBall.position.y;
+    __block bool correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
+    __block bool ballOnTheScreen = (self.frame.size.height >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
+    __block bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+    __block bool shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
+    if (shouldHitBall && (self.consecutiveAIHits < 4))
+    {
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.3 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+            ballCourtSide = self.volleyBall.position.x;
+            ballHeight = self.volleyBall.position.y;
+            correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
+            ballOnTheScreen = (self.frame.size.height >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
+            lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+            shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
+            if (shouldHitBall && self.computerToHit)
+            {
+                UITouch *ballHit = [[UITouch alloc] init];
+                self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
+                [self computerHitBall:ballHit];
+                self.computerToHit = NO;
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                    self.computerToHit = YES;
+                });
+            }
+        });
+    }
+}
+
+
+-(void)computerHitBall:(UITouch *)firstTouch
+{
+    CGPoint ballLocation = self.volleyBall.position;
+    CGPoint touchLocation = pointAI(ballLocation, 1,-1);
+    CGFloat forceHit = 90;
+    CGPoint pointForRatio = pointSubtract(touchLocation, ballLocation);
+    CGFloat xBallVector = forceHit * (pointForRatio.x / -ABS(pointForRatio.y));
+    xBallVector = constrainFloat(-forceHit, forceHit, xBallVector);
+    CGFloat yBallVector = forceHit * (pointForRatio.y / -ABS(pointForRatio.x));
+    yBallVector = constrainFloat(-0.75*forceHit, forceHit, yBallVector);
+    
+    self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
+    [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];
+    self.consecutiveAIHits ++;
+}
+
+
+#pragma mark - general game setup
 
 -(void)setupSceneAndNodes
 {
@@ -155,7 +239,14 @@ static const uint32_t ceilingCategory = 1 << 5;
     //SET UP PLAYER NAME LABELS
     [self setUpPlayerNames];
     
+    //SET UP DEBUG NODES
+    if (self.debugMode)
+    {
+        [self setUpDebugNodes];
+        self.heightWidthLabel.text = [NSString stringWithFormat:@"width: %.0f height: %.0f", self.screenWidth , self.screenHeight];
+    }
     
+    //EXIT GAME BUTTON
     [self exitGameButton];
     
     self.allowBallHit = NO;
@@ -164,8 +255,6 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 
 #pragma mark - set up scene nodes
-
-
 
 -(void)setUpVolleyBall
 {
@@ -344,6 +433,8 @@ static const uint32_t ceilingCategory = 1 << 5;
 }
 
 
+#pragma mark - restart
+
 -(void)placeRestartGameButton
 {
     self.gameStopped = YES;
@@ -380,6 +471,30 @@ static const uint32_t ceilingCategory = 1 << 5;
 }
 
 
+#pragma mark - debug items
+-(void)setUpDebugNodes
+{
+    // BALL POSITION DEBUGGER
+    self.ballPositionLabel = [SKLabelNode labelNodeWithFontNamed:@"Helvetica Nue"];
+    self.ballPositionLabel.zPosition = 100;
+    self.ballPositionLabel.name = @"ballPositionLabel";
+    self.ballPositionLabel.fontColor = [SKColor whiteColor];
+    self.ballPositionLabel.fontSize = self.screenHeight /15;
+    self.ballPositionLabel.position = CGPointMake(self.screenWidth / 7, self.screenHeight / 5);
+    [self addChild:self.ballPositionLabel];
+    
+    // BALL SCREENSIZE
+    self.heightWidthLabel = [SKLabelNode labelNodeWithFontNamed:@"Helvetica Nue"];
+    self.heightWidthLabel.zPosition = 100;
+    self.heightWidthLabel.name = @"heightWidthLabel";
+    self.heightWidthLabel.fontColor = [SKColor whiteColor];
+    self.heightWidthLabel.fontSize = self.screenHeight /15;
+    self.heightWidthLabel.position = CGPointMake(self.screenWidth *5.5 / 7, self.screenHeight / 5);
+    [self addChild:self.heightWidthLabel];
+    
+    
+}
+
 #pragma mark - Touch and Hitting
 
 -(void)touchesBegan:(NSSet *)touches withEvent:(UIEvent *)event {
@@ -396,8 +511,6 @@ static const uint32_t ceilingCategory = 1 << 5;
         [[GameAndScoreDetails sharedGameDataStore] resetGame];
         
     }
-    
-    
     
     if([self shouldBallBeHit:firstTouch] && self.allowBallHit)
     {
@@ -497,7 +610,13 @@ static const uint32_t ceilingCategory = 1 << 5;
               dataSendMode:MCSessionSendDataReliable];
     
     self.lastTapper = YES;
+    if(self.computerAI)
+    {
+        self.consecutiveAIHits = 0;
+        [GameAndScoreDetails sharedGameDataStore].rightPlayerHits ++;
+    }
 }
+
 
 #pragma mark - contact made
 
@@ -724,6 +843,10 @@ static inline CGPoint transformForHit(CGPoint a , CGPoint b) {
 
 static inline CGPoint pointAddition(CGPoint a, CGPoint b) {
     return CGPointMake(a.x + b.x, a.y + b.y);
+}
+
+static inline CGPoint pointAI(CGPoint a, float x, float y) {
+    return CGPointMake(a.x + x, a.y + y);
 }
 
 static inline CGPoint pointSubtract(CGPoint a, CGPoint b) {
