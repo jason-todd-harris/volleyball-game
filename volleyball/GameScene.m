@@ -53,6 +53,10 @@
 @property (nonatomic, strong) NSString *gameFontName;
 @property (nonatomic, strong) SKColor *skyColor;
 
+//COMPUTER HITS
+@property (nonatomic, strong) SKShapeNode *compTouchOne;
+@property (nonatomic, strong) SKShapeNode *compTouchTwo;
+@property (nonatomic, strong) SKShapeNode *compTouchThree;
 
 //SETTINGS
 @property (nonatomic, assign) CGFloat ballDepthInSand;
@@ -98,11 +102,12 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.physicsWorld.contactDelegate = self;
     self.screenSizeMultiplier = (1-self.view.frame.size.width / self.view.frame.size.height * 375 / 667.0);
     self.ballDepthInSand = self.screenHeight / 100;
-    self.gravityValue =  -2.5; // v1.0 was -2.5;
     self.fenceSizeRatio = 2.125;
     self.allowableHits = 3;
     self.lastTapper = NO;
     self.strikingForce = 90; // v1.0 was 90;
+    self.gravityValue =  -2.5; // v1.0 was -2.5;
+    self.waitTime = 0.25;
     self.frameCounter = 0;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
@@ -113,16 +118,14 @@ static const uint32_t ceilingCategory = 1 << 5;
     if (self.isMultiplayer)
     {
         self.multiPlayerVC.delegate = self;
+        self.consecutiveAIHits = 1;
     }
     
     
     [self setupSceneAndNodes];
     
     
-    NSLog(@"%1.f width %1.f height self.frame",self.frame.size.width,self.frame.size.height);
-    NSLog(@"%1.f width %1.f height self.view",self.view.frame.size.width,self.view.frame.size.height);
-    NSLog(@"%1.f width %1.f height view.bounds",view.bounds.size.width,view.bounds.size.height);
-    NSLog(@"%1.f width %1.f height self.height",self.size.width,self.size.height);
+    NSLog(@"%1.f width %1.f height",self.screenWidth,self.screenHeight);
 }
 
 
@@ -149,6 +152,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         [self actionFromAI];
     }
     
+    
     if ([GameAndScoreDetails sharedGameDataStore].debug)
     {
         self.ballPositionLabel.text = [NSString stringWithFormat:@"x: %.0f y: %.0f",self.volleyBall.position.x , self.volleyBall.position.y];
@@ -166,18 +170,19 @@ static const uint32_t ceilingCategory = 1 << 5;
     __block CGFloat ballCourtSide = self.volleyBall.position.x;
     __block CGFloat ballHeight = self.volleyBall.position.y;
     __block bool correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-    __block bool ballOnTheScreen = (self.frame.size.height >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
-    __block bool lessThanThreeHits = (self.consecutiveAIHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+    __block bool ballOnTheScreen = (self.screenHeight >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
+    __block bool lessThanThreeHits = (self.consecutiveAIHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
     __block bool shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
     
-    if (shouldHitBall && (self.consecutiveAIHits < 4))
+    if (shouldHitBall && lessThanThreeHits && self.computerToHit)
     {
+        self.waitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(100)/100;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime* NSEC_PER_SEC)), dispatch_get_main_queue(), ^{  //TIME TO WAIT FOR HIT
             ballCourtSide = self.volleyBall.position.x;
             ballHeight = self.volleyBall.position.y;
             correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-            ballOnTheScreen = (self.frame.size.height >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
-            lessThanThreeHits = (self.consecutiveAIHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+            ballOnTheScreen = (self.screenHeight >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
+            lessThanThreeHits = (self.consecutiveAIHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
             shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
             if (shouldHitBall && self.computerToHit)
             {
@@ -185,6 +190,7 @@ static const uint32_t ceilingCategory = 1 << 5;
                 self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
                 [self computerHitBall:ballHit];
                 self.computerToHit = NO;
+                self.waitTime = self.waitTime + self.waitTime * arc4random_uniform(100)/100;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
                     self.computerToHit = YES;
                 });
@@ -197,21 +203,62 @@ static const uint32_t ceilingCategory = 1 << 5;
 -(void)computerHitBall:(UITouch *)firstTouch
 {
     CGFloat fenceTop = self.fenceShapeNode.frame.origin.y + self.fenceShapeNode.frame.size.height;
-    CGFloat fenceAndVolleyball = fenceTop + self.volleyBall.size.height / 2;
     CGPoint ballLocation = self.volleyBall.position;
-    CGFloat groundWithBall = self.groundNodeLeft.position.y + self.volleyBall.size.height / 2;
-    
-    CGFloat fenceDistanceToTop = self.screenHeight - fenceAndVolleyball;
-    CGFloat volleyballDistanceToTop = self.screenHeight - self.volleyBall.position.y;
+    CGFloat ballsize = self.volleyBall.size.width;
+    CGFloat fenceAndVolleyball = fenceTop + self.volleyBall.size.height / 2;
     
     
-    CGPoint touchLocation = pointAI(ballLocation, 1,1); // WILL PUT STUFF HERE
+    CGFloat fullPhyiscsWidth = self.screenWidth - ballsize/2;
+    CGFloat physicsWidthHalf = self.screenWidth - self.screenWidth/2 - ballsize - 5;
+    
+    CGFloat xLocale = 1;
+    CGFloat yLocale = (ballLocation.y - fenceAndVolleyball - self.volleyBall.frame.size.height/2) / (self.screenHeight / 2);
+    
+    if (ballLocation.y >= fenceAndVolleyball)
+    {
+        yLocale = (fullPhyiscsWidth - ballLocation.x - (ballLocation.x - self.screenWidth/2)) / physicsWidthHalf;
+        CGFloat heightAdjustment = (self.screenHeight - ballLocation.y)/self.screenHeight;
+        yLocale = yLocale - heightAdjustment;
+        // AS IT GETS CLOSER TO NET IT HITS MORE EVEN
+        
+        if(ballLocation.x <= physicsWidthHalf*1.5)
+        {
+            if(arc4random_uniform(100)<60)
+            {
+                yLocale = -1.0*arc4random_uniform(100)/100;
+            }
+        }
+        
+        
+    } else
+    {
+        yLocale = 1 / ((fullPhyiscsWidth - ballLocation.x) / (physicsWidthHalf) - 1);
+        yLocale  = -fabs(yLocale);
+        if (ballLocation.x <= physicsWidthHalf*1.5 && ballLocation.y <= fenceAndVolleyball - ballsize)
+        {
+            xLocale = -10;
+            
+        }
+        
+        
+    }
     
     //WITH DEBUG ON
     if([GameAndScoreDetails sharedGameDataStore].debug)
     {
-        touchLocation = pointAI(ballLocation, [GameAndScoreDetails sharedGameDataStore].xComputerStrike, [GameAndScoreDetails sharedGameDataStore].yComputerStrike);
+        if ([GameAndScoreDetails sharedGameDataStore].yComputerStrike!= 0)
+        {
+            yLocale = [GameAndScoreDetails sharedGameDataStore].yComputerStrike;
+        }
+        if([GameAndScoreDetails sharedGameDataStore].xComputerStrike != 0)
+        {
+            xLocale = [GameAndScoreDetails sharedGameDataStore].xComputerStrike;
+        }
     }
+    CGFloat angle = -atan(1/yLocale/xLocale)*180/M_PI;
+    NSLog(@"multiple %1.2f   angle: %1.0f",yLocale/xLocale,angle);
+    
+    CGPoint touchLocation = pointAI(ballLocation, xLocale,yLocale); // WILL PUT STUFF HERE
     
     CGFloat forceHit = self.strikingForce;
     
@@ -221,9 +268,58 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGFloat yBallVector = forceHit * (pointForRatio.y / -ABS(pointForRatio.x));
     yBallVector = constrainFloat(-0.75*forceHit, forceHit, yBallVector);
     
-    self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
-    [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];
+    self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);  // REMOVE COMMENT AFTER DEBUG
+    [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)]; // REMOVE COMMENT AFTER DEBUG
+    [self addComputerTouchPoints:ballLocation];
     self.consecutiveAIHits ++;
+    [self drawDebugVectorBallLocation:ballLocation touchLocation:touchLocation];
+    
+}
+
+
+
+-(void)addComputerTouchPoints:(CGPoint)touchLocation
+{
+    switch (self.consecutiveAIHits) {
+        case 1:
+        {
+            [self removeChildrenInArray:@[self.compTouchOne]];
+            self.compTouchOne.position = touchLocation;
+            self.compTouchOne.alpha = 0.33;
+            [self addChild:self.compTouchOne];
+            [self removeChildrenInArray:@[self.compTouchTwo,self.compTouchThree]];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime*4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self removeChildrenInArray:@[self.compTouchOne]];
+            });
+            break;
+        }
+        case 2:
+        {
+            [self removeChildrenInArray:@[self.compTouchTwo]];
+            self.compTouchTwo.position = touchLocation;
+            self.compTouchTwo.alpha = .66;
+            [self addChild:self.compTouchTwo];
+            [self removeChildrenInArray:@[self.compTouchThree]];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime*4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self removeChildrenInArray:@[self.compTouchTwo]];
+            });
+            break;
+        }
+        case 3:
+        {
+            [self removeChildrenInArray:@[self.compTouchThree]];
+            self.compTouchThree.position = touchLocation;
+            self.compTouchThree.alpha = 1;
+            [self addChild:self.compTouchThree];
+            dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime*4 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                [self removeChildrenInArray:@[self.compTouchThree]];
+            });
+            break;
+        }
+        default:
+            break;
+    }
+    
 }
 
 
@@ -237,18 +333,11 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.gameStopped = NO;
     [GameAndScoreDetails sharedGameDataStore].rightPlayerHits = 0;
     [GameAndScoreDetails sharedGameDataStore].leftPlayerHits = 0;
+    self.consecutiveAIHits = 1;
     
     
-    //the touch point
-    self.showsTouchPoint = [[SKShapeNode alloc] init];
-    CGMutablePathRef ballPath = CGPathCreateMutable();
-    CGPathAddArc(ballPath, NULL, 0,0, self.screenHeight / 30, 0, M_PI*2, YES);
-    self.showsTouchPoint.path = ballPath;
-    self.showsTouchPoint.lineWidth = 1.0;
-    self.showsTouchPoint.fillColor = [SKColor darkGrayColor];
-    self.showsTouchPoint.alpha = 0.5;
-    self.showsTouchPoint.glowWidth = 0.0;
-    self.showsTouchPoint.zPosition = 15;
+    //SET UP TOUCHPOINTS
+    [self setupTouchPoints];
     
     //SET UP VOLLEYBALL
     [self setUpVolleyBall];
@@ -279,11 +368,49 @@ static const uint32_t ceilingCategory = 1 << 5;
     [self exitGameButton];
     
     self.allowBallHit = NO;
+    self.consecutiveAIHits = 3;
+    
     
 }
 
 
 #pragma mark - set up scene nodes
+
+-(void)setupTouchPoints
+{
+    //the touch point
+    self.showsTouchPoint = [[SKShapeNode alloc] init];
+    CGMutablePathRef ballPath = CGPathCreateMutable();
+    CGPathAddArc(ballPath, NULL, 0,0, self.screenHeight / 40, 0, M_PI*2, YES);
+    self.showsTouchPoint.path = ballPath;
+    self.showsTouchPoint.lineWidth = 1.0;
+    self.showsTouchPoint.fillColor = [SKColor blueColor];
+    self.showsTouchPoint.alpha = 0.5;
+    self.showsTouchPoint.glowWidth = 0.0;
+    self.showsTouchPoint.zPosition = 15;
+    
+    //the touch point
+    self.compTouchOne = [[SKShapeNode alloc] init];
+    self.compTouchTwo = [[SKShapeNode alloc] init];
+    self.compTouchThree  = [[SKShapeNode alloc] init];
+    
+    NSArray *compTouchArrays = @[self.compTouchThree,self.compTouchTwo,self.compTouchOne];
+    
+    for (SKShapeNode *compTouch in compTouchArrays) {
+        CGMutablePathRef compTouchPath = CGPathCreateMutable();
+        CGPathAddArc(compTouchPath, NULL, 0,0, self.screenHeight / 50, 0, M_PI*2, YES);
+        compTouch.path = compTouchPath;
+        compTouch.lineWidth = 1.0;
+        compTouch.fillColor = [SKColor redColor];
+        compTouch.alpha = 0.75;
+        compTouch.glowWidth = 0.0;
+        compTouch.zPosition = 15;
+    }
+    
+    
+    
+}
+
 
 -(void)setUpVolleyBall
 {
@@ -443,6 +570,10 @@ static const uint32_t ceilingCategory = 1 << 5;
     playerTwoLabel.alpha = playerLabelAlpha;
     playerTwoLabel.position = CGPointMake(self.screenWidth -  playerLabelIndentation, playerLabelHeight);
     
+    if([GameAndScoreDetails sharedGameDataStore].computerPlayer)
+    {
+        playerTwoLabel.text = @"COMPUTER";
+    }
     
     if(self.hostValue == 0)
     {
@@ -472,6 +603,10 @@ static const uint32_t ceilingCategory = 1 << 5;
         if([GameAndScoreDetails sharedGameDataStore].theBallServer)
         {
             self.whoShouldTap = @"PLAYER 2 - ";
+            if (self.computerAI)
+            {
+                self.whoShouldTap = @"";
+            }
         } else
         {
             self.whoShouldTap = @"PLAYER 1 - ";
@@ -520,6 +655,36 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.heightWidthLabel.fontSize = self.screenHeight /15;
     self.heightWidthLabel.position = CGPointMake(self.screenWidth *5.5 / 7, self.screenHeight / 5);
     [self addChild:self.heightWidthLabel];
+    
+    
+}
+
+-(void)drawDebugVectorBallLocation:(CGPoint)ballLocation touchLocation:(CGPoint)touchLocation
+{
+    //vector
+    CGMutablePathRef pathToDraw = CGPathCreateMutable();
+    CGPoint secondPoint = pointForLine(ballLocation,touchLocation,40);
+    CGPathMoveToPoint(pathToDraw, NULL, ballLocation.x, ballLocation.y);
+    CGPathAddLineToPoint(pathToDraw, NULL, ballLocation.x, ballLocation.y);
+    CGPathAddLineToPoint(pathToDraw, NULL, secondPoint.x, secondPoint.y);
+    SKShapeNode *lineNode = [SKShapeNode node];
+    lineNode.path = pathToDraw;
+    lineNode.zPosition = 400;
+    lineNode.lineWidth = 3;
+    lineNode.strokeColor = [SKColor redColor];
+    [self addChild:[lineNode copy]];
+    
+    //ball at end
+    SKShapeNode *endArrow= [[SKShapeNode alloc] init];
+    CGMutablePathRef ballPath = CGPathCreateMutable();
+    CGPathAddArc(ballPath, NULL, 0,0, self.screenHeight / 70, 0, M_PI*2, YES);
+    endArrow.path = ballPath;
+    endArrow.lineWidth = 1.0;
+    endArrow.fillColor = [SKColor blackColor];
+    endArrow.alpha = 1;
+    endArrow.position = ballLocation;
+    endArrow.zPosition = 500;
+    [self addChild:endArrow];
     
     
 }
@@ -641,8 +806,8 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.lastTapper = YES;
     if(self.computerAI)
     {
-        self.consecutiveAIHits = 0;
-        [GameAndScoreDetails sharedGameDataStore].rightPlayerHits ++;
+        self.consecutiveAIHits = 1;
+        [GameAndScoreDetails sharedGameDataStore].leftPlayerHits ++;
     }
 }
 
@@ -659,6 +824,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     if(leftSideFall || rightSideFall)
     {
         self.lastTapper = NO;
+        self.consecutiveAIHits = 4;
     }
     
     
@@ -679,10 +845,10 @@ static const uint32_t ceilingCategory = 1 << 5;
         {
             [self flashBackgroundScreen:nil];
             [[GameAndScoreDetails sharedGameDataStore] leftPlayerScored];
-            [self placeRestartGameButton];
+            [self placeRestartGameButton]; //REMOVE COMMENTING AFTER DEBUGGIN
         }
         NSLog(@"Right side Hit");
-        self.gameStopped = YES;
+        self.gameStopped = YES; //REMOVE COMMENTING AFTER DEBUGGIN
     } else if (netHit)
     {
         [self flashBackgroundScreen:[SKColor grayColor]];
@@ -876,6 +1042,18 @@ static inline CGPoint pointAddition(CGPoint a, CGPoint b) {
 
 static inline CGPoint pointAI(CGPoint a, float x, float y) {
     return CGPointMake(a.x + x, a.y + y);
+}
+
+static inline CGPoint pointForLine(CGPoint start, CGPoint end, CGFloat length)
+{
+    CGFloat yDist = end.y - start.y;
+    CGFloat xDist = end.x - start.x;
+    CGFloat hypotnuse = pow(pow(yDist,2) + pow(xDist,2),0.5);
+    CGFloat ratio = length / hypotnuse;
+    yDist = yDist*ratio;
+    xDist = xDist*ratio;
+    
+    return  CGPointMake(start.x + xDist, start.y + yDist);
 }
 
 static inline CGPoint pointSubtract(CGPoint a, CGPoint b) {

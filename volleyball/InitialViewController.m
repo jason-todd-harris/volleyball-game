@@ -301,11 +301,11 @@
     
     self.debugGravity = [[UITextField alloc] init];
     self.debugGravity.placeholder = @"gravity";
-    self.debugGravity.text = @"-2.50";
+    self.debugGravity.text = @"-2.5";
     
     self.debugWaitTime = [[UITextField alloc] init];
     self.debugWaitTime.placeholder = @"wait time";
-    self.debugWaitTime.text = @"1";
+    self.debugWaitTime.text = @"0.4";
     
     
     
