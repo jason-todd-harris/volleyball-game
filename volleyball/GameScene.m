@@ -192,7 +192,8 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     if (shouldHitBall && lessThanThreeHits && self.computerToHit)
     {
-        __block CGFloat newWaitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(200 + self.missChance)/200;
+        __block CGFloat newWaitTime = self.waitTime + 0.25 * self.waitTime * arc4random_uniform(100 + self.missChance)/100;
+        
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime* NSEC_PER_SEC)), dispatch_get_main_queue(), ^{  //TIME TO WAIT FOR HIT
             ballCourtSide = self.volleyBall.position.x;
             ballHeight = self.volleyBall.position.y;
@@ -206,8 +207,9 @@ static const uint32_t ceilingCategory = 1 << 5;
                 self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
                 [self computerHitBall:ballHit];
                 self.computerToHit = NO;
-                newWaitTime = self.waitTime + 1/self.easeMultiplier * self.waitTime * arc4random_uniform(200 + self.missChance)/200;
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
+//                newWaitTime = self.waitTime + self.easeMultiplier * self.waitTime * arc4random_uniform(100 + self.missChance)/100 * 0.1;
+//                                NSLog(@"WAIT #2: %1.2f sec",newWaitTime);
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)((self.waitTime + self.waitTime/10*self.easeMultiplier) * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
                     self.computerToHit = YES;
                 });
             }
@@ -240,14 +242,15 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         if(ballLocation.x <= physicsWidthHalf*1.5)
         {
-            if(arc4random_uniform(100) < 15 * self.easeMultiplier + self.missChance) //AS MISS CHANCE GOES UP SPIKE IS LESS LIKELY
+            CGFloat chanceOfSlam =  25 / self.easeMultiplier + self.missChance * 3 / self.easeMultiplier;
+            NSLog(@"miss: %1.1f%% and slam: %1.0f%%",self.missChance, chanceOfSlam);
+            if(arc4random_uniform(100) < 10 / self.easeMultiplier + self.missChance * 3 / self.easeMultiplier) //CHANCE OF SLAMMING BALL
             {
-                yLocale = -1.0*arc4random_uniform(100)/100;
+                forceHit = self.strikingForce + 2 * self.strikingForce * arc4random_uniform(100)/100 /self.easeMultiplier ;
+                NSLog(@"SLAMMED!");
             } else
             {
-                forceHit = self.strikingForce + self.strikingForce * arc4random_uniform(200)/100 ;
-                self.missChance += self.missChance * 0.1 * self.easeMultiplier;
-                NSLog(@"SLAMMED!");
+                yLocale = -1.0*arc4random_uniform(100)/100;
             }
         }
         
@@ -258,17 +261,14 @@ static const uint32_t ceilingCategory = 1 << 5;
         yLocale  = -fabs(yLocale);
         if (ballLocation.x <= physicsWidthHalf*1.5 && ballLocation.y <= fenceAndVolleyball - ballsize)
         {
-            xLocale = -10;
+            xLocale = -15;
             
         }
-        
-        
     }
     
     
 //    CGFloat angle = -atan(1/yLocale/xLocale)*180/M_PI;
 //    NSLog(@"multiple %1.2f   angle: %1.0f",yLocale/xLocale,angle);
-    
     CGPoint touchLocation = pointAI(ballLocation, xLocale,yLocale); // WILL PUT STUFF HERE
     
     CGPoint pointForRatio = pointSubtract(touchLocation, ballLocation);
@@ -277,21 +277,17 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGFloat yBallVector = forceHit * (pointForRatio.y / -ABS(pointForRatio.x));
     yBallVector = constrainFloat(-0.75*forceHit, forceHit, yBallVector);
     
-    
     //DOES THE SHOT MISS
     NSUInteger randomThing = arc4random_uniform(100/self.easeMultiplier);
     NSString *missOrHitLog = self.missChance > randomThing ? @"MISS!!" : @"";
-    NSLog(@"%@     probability: %@%%", missOrHitLog , @(self.missChance * self.easeMultiplier) );
+//    NSLog(@"%@     probability: %@%%", missOrHitLog , @(self.missChance * self.easeMultiplier) );
     if(self.missChance > randomThing)
     {
-        self.missTrackerLabel.text = [NSString stringWithFormat:@"MISS! probability: %1.1f%%", self.missChance * self.easeMultiplier];
+        self.missTrackerLabel.text = [NSString stringWithFormat:@"MISS! probability: %1.1f%%",self.missChance * self.easeMultiplier];
         self.missTrackerLabel.fontColor = [SKColor redColor];
         if(forceHit > self.strikingForce)
         {
             self.missTrackerLabel.text = [NSString stringWithFormat:@"MISSED SLAM! probability: %1.1f%%", self.missChance * self.easeMultiplier];
-        } else
-        {
-            self.missChance /= self.easeMultiplier;
         }
 
     } else
@@ -300,9 +296,21 @@ static const uint32_t ceilingCategory = 1 << 5;
         self.missTrackerLabel.text = [NSString stringWithFormat:@"miss probability: %1.1f%%", self.missChance * self.easeMultiplier];
         self.missTrackerLabel.fontColor = [SKColor whiteColor];
         
-        //ACTUAL GAME
-        self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
-        [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];
+        //BALL SLAMMED
+        if(forceHit > self.strikingForce)
+        {
+            self.missChance = self.missChance / 3 * self.easeMultiplier;
+        }
+
+        
+        //RANDOMIZE THE FORCE TEMPORARILY
+        forceHit = forceHit * 0.5 + forceHit * 1.0 * arc4random_uniform(100)/100;
+        
+        
+        
+//        //ACTUAL GAME
+//        self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);  //COMMENT TO DEBUG VECTORS
+//        [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];  //COMMENT TO DEBUG VECTORS
         [self addComputerTouchPoints:pointForLine(ballLocation, touchLocation, 20)];
         
         if([GameAndScoreDetails sharedGameDataStore].debug)
@@ -312,7 +320,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         self.consecutiveAIHits ++;
         self.localGameStore.leftPlayerHits = 0;
-        self.missChance += self.easeMultiplier;
+        self.missChance += self.easeMultiplier/1.75;
     }
 }
 
@@ -714,7 +722,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.missTrackerLabel.name = @"missTracker";
     self.missTrackerLabel.fontColor = [SKColor whiteColor];
     self.missTrackerLabel.fontSize = self.screenHeight /20;
-    self.missTrackerLabel.position = CGPointMake(self.screenWidth *5.5 / 7, self.screenHeight * 3 / 5);
+    self.missTrackerLabel.position = CGPointMake(self.screenWidth * 5 / 7, self.screenHeight * 3 / 5);
     [self addChild:self.missTrackerLabel];
     
 }
@@ -905,10 +913,10 @@ static const uint32_t ceilingCategory = 1 << 5;
         {
             [self flashBackgroundScreen:nil];
             [[GameAndScoreDetails sharedGameDataStore] leftPlayerScored];
-            [self placeRestartGameButton]; //REMOVE COMMENTING AFTER DEBUGGIN
+            [self placeRestartGameButton]; //REMOVE COMMENTING AFTER DEBUGGING
         }
 //        NSLog(@"Right side Hit");
-        self.gameStopped = YES; //REMOVE COMMENTING AFTER DEBUGGIN
+        self.gameStopped = YES; //REMOVE COMMENTING AFTER DEBUGGING
     } else if (netHit)
     {
         [self flashBackgroundScreen:[SKColor grayColor]];
