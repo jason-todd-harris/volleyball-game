@@ -176,8 +176,8 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     if (shouldHitBall && lessThanThreeHits && self.computerToHit)
     {
-        self.waitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(100)/100;
-        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime* NSEC_PER_SEC)), dispatch_get_main_queue(), ^{  //TIME TO WAIT FOR HIT
+        __block CGFloat newWaitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(100)/100;
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime* NSEC_PER_SEC)), dispatch_get_main_queue(), ^{  //TIME TO WAIT FOR HIT
             ballCourtSide = self.volleyBall.position.x;
             ballHeight = self.volleyBall.position.y;
             correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
@@ -190,8 +190,8 @@ static const uint32_t ceilingCategory = 1 << 5;
                 self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
                 [self computerHitBall:ballHit];
                 self.computerToHit = NO;
-                self.waitTime = self.waitTime + self.waitTime * arc4random_uniform(100)/100;
-                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(self.waitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
+                newWaitTime = 2 * self.waitTime * arc4random_uniform(100)/100;
+                dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
                     self.computerToHit = YES;
                 });
             }
@@ -229,7 +229,7 @@ static const uint32_t ceilingCategory = 1 << 5;
                 yLocale = -1.0*arc4random_uniform(100)/100;
             } else
             {
-                forceHit = self.strikingForce*1.5;
+                forceHit = self.strikingForce*2;
                 NSLog(@"SLAMMED!");
             }
         }
@@ -275,8 +275,13 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);  // REMOVE COMMENT AFTER DEBUG
     [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)]; // REMOVE COMMENT AFTER DEBUG
     [self addComputerTouchPoints:ballLocation];
+    
+    if([GameAndScoreDetails sharedGameDataStore].debug)
+    {
+        [self drawDebugVectorBallLocation:ballLocation touchLocation:touchLocation];
+    }
+    
     self.consecutiveAIHits ++;
-    [self drawDebugVectorBallLocation:ballLocation touchLocation:touchLocation];
     self.localGameStore.leftPlayerHits = 0;
     
 }
@@ -374,6 +379,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     self.allowBallHit = NO;
     self.consecutiveAIHits = 3;
+    self.computerToHit = YES;
     
     
 }
@@ -754,12 +760,12 @@ static const uint32_t ceilingCategory = 1 << 5;
     if(self.hostValue ==0 || (self.computerAI && !debugMode))  // IF PLAYER ONE
     {
         bool correctSideOfCourt = (self.frame.size.width/2 >= ballCourtSide);  //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].leftPlayerHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].leftPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
         shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
     } else if (self.hostValue == 1)  //IF PLAYER 2
     {
         bool correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
         shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
     }
     
@@ -812,7 +818,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     if(self.computerAI)
     {
         self.consecutiveAIHits = 1;
-        [GameAndScoreDetails sharedGameDataStore].leftPlayerHits ++;
+        self.computerToHit = YES;
     }
 }
 
