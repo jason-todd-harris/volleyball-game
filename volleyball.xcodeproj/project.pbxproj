@@ -26,6 +26,7 @@
 		967068C11BEA7E18003277D3 /* PLPartyTime.m in Sources */ = {isa = PBXBuildFile; fileRef = 967068C01BEA7E18003277D3 /* PLPartyTime.m */; };
 		969BDB951C0CABC100B0293E /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 969BDB941C0CABC100B0293E /* Default-568h@2x.png */; };
 		96AF908E1BFCC75200BCFC96 /* SettingsViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = 96AF908D1BFCC75200BCFC96 /* SettingsViewController.m */; };
+		96E05B391C17EB98004109B2 /* DebugMenu.m in Sources */ = {isa = PBXBuildFile; fileRef = 96E05B381C17EB98004109B2 /* DebugMenu.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -79,6 +80,8 @@
 		969BDB941C0CABC100B0293E /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 		96AF908C1BFCC75200BCFC96 /* SettingsViewController.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = SettingsViewController.h; sourceTree = "<group>"; };
 		96AF908D1BFCC75200BCFC96 /* SettingsViewController.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = SettingsViewController.m; sourceTree = "<group>"; };
+		96E05B371C17EB98004109B2 /* DebugMenu.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = DebugMenu.h; sourceTree = "<group>"; };
+		96E05B381C17EB98004109B2 /* DebugMenu.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = DebugMenu.m; sourceTree = "<group>"; };
 		AA6D1F5E922E5CDB9B2CC3A1 /* Pods-volleyball.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-volleyball.debug.xcconfig"; path = "Pods/Target Support Files/Pods-volleyball/Pods-volleyball.debug.xcconfig"; sourceTree = "<group>"; };
 		CD3E312E20BEBF79247D2C97 /* Pods-volleyball.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-volleyball.release.xcconfig"; path = "Pods/Target Support Files/Pods-volleyball/Pods-volleyball.release.xcconfig"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
@@ -154,10 +157,12 @@
 				967068B91BEA78AD003277D3 /* MultiplayerViewController.h */,
 				967068BA1BEA78AD003277D3 /* MultiplayerViewController.m */,
 				961927001BE924F6003A4E2A /* LaunchScreen.storyboard */,
-				96AF908C1BFCC75200BCFC96 /* SettingsViewController.h */,
-				96AF908D1BFCC75200BCFC96 /* SettingsViewController.m */,
 				967068BC1BEA7BF2003277D3 /* InitialViewController.h */,
 				967068BD1BEA7BF2003277D3 /* InitialViewController.m */,
+				96AF908C1BFCC75200BCFC96 /* SettingsViewController.h */,
+				96AF908D1BFCC75200BCFC96 /* SettingsViewController.m */,
+				96E05B371C17EB98004109B2 /* DebugMenu.h */,
+				96E05B381C17EB98004109B2 /* DebugMenu.m */,
 				961926FE1BE924F6003A4E2A /* Assets.xcassets */,
 				967068BF1BEA7E18003277D3 /* PLPartyTime.h */,
 				967068C01BEA7E18003277D3 /* PLPartyTime.m */,
@@ -398,6 +403,7 @@
 				967068C11BEA7E18003277D3 /* PLPartyTime.m in Sources */,
 				967068BB1BEA78AD003277D3 /* MultiplayerViewController.m in Sources */,
 				967068B81BEA6D3B003277D3 /* GameAndScoreDetails.m in Sources */,
+				96E05B391C17EB98004109B2 /* DebugMenu.m in Sources */,
 				96AF908E1BFCC75200BCFC96 /* SettingsViewController.m in Sources */,
 				967068BE1BEA7BF2003277D3 /* InitialViewController.m in Sources */,
 				961926EF1BE924F6003A4E2A /* main.m in Sources */,

@@ -229,7 +229,7 @@ static const uint32_t ceilingCategory = 1 << 5;
                 yLocale = -1.0*arc4random_uniform(100)/100;
             } else
             {
-                forceHit = self.strikingForce*2;
+                forceHit = self.strikingForce*2.5;
                 NSLog(@"SLAMMED!");
             }
         }

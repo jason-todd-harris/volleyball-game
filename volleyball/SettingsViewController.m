@@ -8,12 +8,14 @@
 
 #import "SettingsViewController.h"
 #import <Masonry.h>
+#import "DebugMenu.h"
 #import <Appirater.h>
 
 @interface SettingsViewController ()
 @property (nonatomic, assign) CGFloat screenWidth;
 @property (nonatomic, assign) CGFloat screenHeight;
 @property (nonatomic, strong) UIButton *backButton;
+@property (nonatomic, strong) UIButton *settingsButton;
 @property (nonatomic, strong) UILabel *rateMeButton;
 @property (nonatomic, strong) UILabel *settingsText;
 @property (nonatomic, strong) UILabel *developedByJasonHarris;
@@ -55,14 +57,34 @@
         make.bottomMargin.equalTo(self.view).offset(-15);
     }];
     
+    UIImage *settingsImage = [UIImage imageNamed:@"beachvolleyball-settingsButton"];
+    sizeRatio = settingsImage.size.height / self.screenHeight * 8;
+    settingsImage = [UIImage imageWithCGImage:settingsImage.CGImage
+                                        scale:sizeRatio
+                                  orientation:settingsImage.imageOrientation];
+    
+    self.settingsButton = [[UIButton alloc] init];
+    self.settingsButton.accessibilityLabel = @"settings";
+    [self.settingsButton setImage:settingsImage forState:UIControlStateNormal];
+    
+    [self.view addSubview:self.settingsButton];
+    
+    [self.settingsButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.centerY.equalTo(self.backButton);
+        make.left.equalTo(self.backButton.mas_right).offset(10);
+    }];
     
     
-    NSArray *buttonArray = @[self.backButton];
+    
+    
+    NSArray *buttonArray = @[self.backButton, self.settingsButton];
     for (UIButton *button in buttonArray) {
         [button addTarget:self
                    action:@selector(buttonClicked:)
          forControlEvents:UIControlEventTouchUpInside];
     }
+    
+    
     
     [self displayRateMeButton];
     [self displayRegularText];
@@ -146,7 +168,7 @@
 -(void)buttonClicked:(UIButton *)sender
 {
     
-    if([sender.accessibilityLabel isEqualToString:@"backButton"])
+    if([sender isEqual:self.backButton])
     {
         CATransition *transition = [CATransition animation];
         transition.duration = 0.3;
@@ -156,6 +178,22 @@
         [self.view.window.layer addAnimation:transition forKey:nil];
         
         [self dismissViewControllerAnimated:NO completion:nil];
+    } else if ([sender isEqual:self.settingsButton])
+    {
+        CATransition *transition = [CATransition animation];
+        transition.duration = 0.3;
+        transition.timingFunction = [CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseInEaseOut];
+        transition.type = kCATransitionPush;
+        transition.subtype = kCATransitionFromRight;
+        [self.view.window.layer addAnimation:transition forKey:nil];
+        
+        SettingsViewController *debugVC = [[DebugMenu alloc] init];
+        [self presentViewController:debugVC animated:NO completion:^{
+            //completion
+        }];
+
+        
+        
     }
 }
 
