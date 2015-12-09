@@ -273,7 +273,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     if(self.missChance > randomThing)
     {
         NSLog(@"MISS!!");
-        self.missChance = self.missChance/3*2;
+        self.missChance = self.missChance/self.easeMultiplier - self.easeMultiplier;
         if(self.missChance <randomThing)
         {
             self.consecutiveAIHits ++;
@@ -782,7 +782,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
     }
     
-    bool closeToTheBall = (ABS(xDistance) < heightVolleyball*3.0) && (ABS(yDistance) < heightVolleyball*3.0);
+    bool closeToTheBall = (ABS(xDistance) < heightVolleyball*2.0) && (ABS(yDistance) < heightVolleyball*2.0);
     
     
     if (closeToTheBall && shouldHitBall)
