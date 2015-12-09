@@ -23,9 +23,6 @@
 @property (nonatomic, strong) SKLabelNode *restartButton;
 @property (nonatomic, strong) SKNode *backButton;
 
-//DEBUG NODES
-@property (nonatomic, strong) SKLabelNode *ballPositionLabel;
-@property (nonatomic, strong) SKLabelNode *heightWidthLabel;
 
 
 //TRACKING VALUES (TOO MANY OF THESE)
@@ -69,6 +66,11 @@
 @property (nonatomic, assign) CGFloat strikingForce;
 @property (nonatomic, assign) CGFloat waitTime;
 
+//DEBUG NODES
+@property (nonatomic, strong) SKLabelNode *ballPositionLabel;
+@property (nonatomic, strong) SKLabelNode *heightWidthLabel;
+@property (nonatomic, strong) SKLabelNode *hitCounterAINode;
+@property (nonatomic, strong) SKLabelNode *missTrackerLabel;
 
 
 
@@ -111,9 +113,9 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.lastTapper = NO;
     self.strikingForce = 90; // v1.0 was 90;
     self.gravityValue =  -2.5; // v1.0 was -2.5;
-    self.waitTime = 0.375;
+    self.waitTime = 0.35;
     self.frameCounter = 0;
-    self.easeMultiplier = 2;
+    self.easeMultiplier = 2.0;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
     self.isMultiplayer = (self.hostValue == 0 || self.hostValue == 1);
@@ -164,6 +166,15 @@ static const uint32_t ceilingCategory = 1 << 5;
         self.gravityValue = [GameAndScoreDetails sharedGameDataStore].debugGravity;
         self.strikingForce = [GameAndScoreDetails sharedGameDataStore].debugForce;
         self.waitTime = [GameAndScoreDetails sharedGameDataStore].debugWaitTime;
+        self.hitCounterAINode.text = [NSString stringWithFormat:@"ai hitting: %lu",self.consecutiveAIHits];
+        if (self.consecutiveAIHits >3)
+        {
+            self.hitCounterAINode.fontColor = [SKColor redColor];
+            self.hitCounterAINode.text = @"NO MORE HITS";
+        } else
+        {
+            self.hitCounterAINode.fontColor = [SKColor whiteColor];
+        }
     }
     
 }
@@ -181,7 +192,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     if (shouldHitBall && lessThanThreeHits && self.computerToHit)
     {
-        __block CGFloat newWaitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(50 + self.missChance)/50;
+        __block CGFloat newWaitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(200 + self.missChance)/200;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime* NSEC_PER_SEC)), dispatch_get_main_queue(), ^{  //TIME TO WAIT FOR HIT
             ballCourtSide = self.volleyBall.position.x;
             ballHeight = self.volleyBall.position.y;
@@ -195,7 +206,7 @@ static const uint32_t ceilingCategory = 1 << 5;
                 self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
                 [self computerHitBall:ballHit];
                 self.computerToHit = NO;
-                newWaitTime = self.easeMultiplier * self.waitTime * arc4random_uniform(50 + self.missChance)/50;
+                newWaitTime = self.waitTime + 1/self.easeMultiplier * self.waitTime * arc4random_uniform(200 + self.missChance)/200;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
                     self.computerToHit = YES;
                 });
@@ -235,7 +246,7 @@ static const uint32_t ceilingCategory = 1 << 5;
             } else
             {
                 forceHit = self.strikingForce + self.strikingForce * arc4random_uniform(200)/100 ;
-                self.missChance += self.missChance * 0.25;
+                self.missChance += self.missChance * 0.1 * self.easeMultiplier;
                 NSLog(@"SLAMMED!");
             }
         }
@@ -264,24 +275,32 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGFloat xBallVector = forceHit * (pointForRatio.x / -ABS(pointForRatio.y));
     xBallVector = constrainFloat(-forceHit, forceHit, xBallVector);
     CGFloat yBallVector = forceHit * (pointForRatio.y / -ABS(pointForRatio.x));
-    yBallVector = constrainFloat(-0.80*forceHit, forceHit, yBallVector);
+    yBallVector = constrainFloat(-0.75*forceHit, forceHit, yBallVector);
     
     
     //DOES THE SHOT MISS
     NSUInteger randomThing = arc4random_uniform(100/self.easeMultiplier);
-    NSLog(@"miss chance: %1.0f  random: %lu",self.missChance,(unsigned long)randomThing);
+    NSString *missOrHitLog = self.missChance > randomThing ? @"MISS!!" : @"";
+    NSLog(@"%@     probability: %@%%", missOrHitLog , @(self.missChance * self.easeMultiplier) );
     if(self.missChance > randomThing)
     {
-        NSLog(@"MISS!!");
-        self.missChance = self.missChance/self.easeMultiplier - self.easeMultiplier;
-        if(self.missChance <randomThing)
+        self.missTrackerLabel.text = [NSString stringWithFormat:@"MISS! probability: %1.1f%%", self.missChance * self.easeMultiplier];
+        self.missTrackerLabel.fontColor = [SKColor redColor];
+        if(forceHit > self.strikingForce)
         {
-            self.consecutiveAIHits ++;
-            NSLog(@"DOUBLE MISS");
+            self.missTrackerLabel.text = [NSString stringWithFormat:@"MISSED SLAM! probability: %1.1f%%", self.missChance * self.easeMultiplier];
+        } else
+        {
+            self.missChance /= self.easeMultiplier;
         }
-        
+
     } else
     {
+        //MISS TRACKER DEBUGGER
+        self.missTrackerLabel.text = [NSString stringWithFormat:@"miss probability: %1.1f%%", self.missChance * self.easeMultiplier];
+        self.missTrackerLabel.fontColor = [SKColor whiteColor];
+        
+        //ACTUAL GAME
         self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
         [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];
         [self addComputerTouchPoints:pointForLine(ballLocation, touchLocation, 20)];
@@ -664,22 +683,39 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     // BALL POSITION DEBUGGER
     self.ballPositionLabel = [SKLabelNode labelNodeWithFontNamed:@"Helvetica Nue"];
-    self.ballPositionLabel.zPosition = 100;
+    self.ballPositionLabel.zPosition = 5;
     self.ballPositionLabel.name = @"ballPositionLabel";
     self.ballPositionLabel.fontColor = [SKColor whiteColor];
-    self.ballPositionLabel.fontSize = self.screenHeight /15;
+    self.ballPositionLabel.fontSize = self.screenHeight /20;
     self.ballPositionLabel.position = CGPointMake(self.screenWidth / 7, self.screenHeight / 5);
     [self addChild:self.ballPositionLabel];
     
     // BALL SCREENSIZE
     self.heightWidthLabel = [SKLabelNode labelNodeWithFontNamed:@"Helvetica Nue"];
-    self.heightWidthLabel.zPosition = 100;
+    self.heightWidthLabel.zPosition = 5;
     self.heightWidthLabel.name = @"heightWidthLabel";
     self.heightWidthLabel.fontColor = [SKColor whiteColor];
-    self.heightWidthLabel.fontSize = self.screenHeight /15;
+    self.heightWidthLabel.fontSize = self.screenHeight /20;
     self.heightWidthLabel.position = CGPointMake(self.screenWidth *5.5 / 7, self.screenHeight / 5);
     [self addChild:self.heightWidthLabel];
+
+    // CONSECUTIVE AI HITS
+    self.hitCounterAINode = [SKLabelNode labelNodeWithFontNamed:@"Helvetica Nue"];
+    self.hitCounterAINode.zPosition = 5;
+    self.hitCounterAINode.name = @"aiHitCounter";
+    self.hitCounterAINode.fontColor = [SKColor whiteColor];
+    self.hitCounterAINode.fontSize = self.screenHeight /20;
+    self.hitCounterAINode.position = CGPointMake(self.screenWidth *5.5 / 7, self.screenHeight * 4 /5);
+    [self addChild:self.hitCounterAINode];
     
+    // MISS TRACKER
+    self.missTrackerLabel = [SKLabelNode labelNodeWithFontNamed:@"Helvetica Nue"];
+    self.missTrackerLabel.zPosition = 5;
+    self.missTrackerLabel.name = @"missTracker";
+    self.missTrackerLabel.fontColor = [SKColor whiteColor];
+    self.missTrackerLabel.fontSize = self.screenHeight /20;
+    self.missTrackerLabel.position = CGPointMake(self.screenWidth *5.5 / 7, self.screenHeight * 3 / 5);
+    [self addChild:self.missTrackerLabel];
     
 }
 

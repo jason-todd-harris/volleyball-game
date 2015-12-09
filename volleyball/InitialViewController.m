@@ -310,7 +310,7 @@
     
     self.debugWaitTime = [[UITextField alloc] init];
     self.debugWaitTime.placeholder = @"wait time";
-    self.debugWaitTime.text = @"0.33";
+    self.debugWaitTime.text = @"0.35";
     
     
     
