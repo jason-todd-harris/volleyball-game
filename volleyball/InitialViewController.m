@@ -15,7 +15,7 @@
 #import "SettingsViewController.h"
 
 
-@interface InitialViewController ()
+@interface InitialViewController () <UITextFieldDelegate>
 @property (weak, nonatomic) IBOutlet UIButton *multiplayerClicked;
 @property (weak, nonatomic) IBOutlet UISegmentedControl *hostSwitch;
 @property (nonatomic, assign) CGFloat screenWidth;
@@ -258,6 +258,10 @@
     
 }
 
+- (BOOL)textFieldShouldReturn:(UITextField *)textField {
+        [textField resignFirstResponder];
+    return YES;
+}
 
 - (void)didReceiveMemoryWarning {
     [super didReceiveMemoryWarning];
@@ -323,6 +327,9 @@
         textField.backgroundColor = [[UIColor alloc] initWithRed:grayNESS green:grayNESS blue:grayNESS alpha:1];
         textField.borderStyle = UITextBorderStyleRoundedRect;
         textField.textAlignment = NSTextAlignmentCenter;
+//        textField.keyboardType = UIKeyboardTypeNumberPad;
+        textField.returnKeyType = UIReturnKeyDone;
+        textField.delegate = self;
         
         [textField mas_makeConstraints:^(MASConstraintMaker *make) {
             make.height.equalTo(@(fontSizeThing*1.25));
@@ -330,7 +337,7 @@
             make.right.equalTo(self.singlePlayerButton.mas_left);
             if(firstOne)
             {
-                make.bottom.equalTo(self.singlePlayerButton.mas_bottom).offset(-10);
+                make.bottom.equalTo(self.singlePlayerButton.mas_bottom).offset(-5);
                 firstOne = NO;
             } else
             {
