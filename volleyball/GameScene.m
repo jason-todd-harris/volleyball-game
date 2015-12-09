@@ -107,7 +107,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.lastTapper = NO;
     self.strikingForce = 90; // v1.0 was 90;
     self.gravityValue =  -2.5; // v1.0 was -2.5;
-    self.waitTime = 0.25;
+    self.waitTime = 0.33;
     self.frameCounter = 0;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
@@ -202,6 +202,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 
 -(void)computerHitBall:(UITouch *)firstTouch
 {
+    CGFloat forceHit = self.strikingForce;
     CGFloat fenceTop = self.fenceShapeNode.frame.origin.y + self.fenceShapeNode.frame.size.height;
     CGPoint ballLocation = self.volleyBall.position;
     CGFloat ballsize = self.volleyBall.size.width;
@@ -223,9 +224,13 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         if(ballLocation.x <= physicsWidthHalf*1.5)
         {
-            if(arc4random_uniform(100)<60)
+            if(arc4random_uniform(100)<50)
             {
                 yLocale = -1.0*arc4random_uniform(100)/100;
+            } else
+            {
+                forceHit = self.strikingForce*1.5;
+                NSLog(@"SLAMMED!");
             }
         }
         
@@ -260,7 +265,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     
     CGPoint touchLocation = pointAI(ballLocation, xLocale,yLocale); // WILL PUT STUFF HERE
     
-    CGFloat forceHit = self.strikingForce;
     
     CGPoint pointForRatio = pointSubtract(touchLocation, ballLocation);
     CGFloat xBallVector = forceHit * (pointForRatio.x / -ABS(pointForRatio.y));
@@ -273,6 +277,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     [self addComputerTouchPoints:ballLocation];
     self.consecutiveAIHits ++;
     [self drawDebugVectorBallLocation:ballLocation touchLocation:touchLocation];
+    self.localGameStore.leftPlayerHits = 0;
     
 }
 
@@ -744,17 +749,17 @@ static const uint32_t ceilingCategory = 1 << 5;
     CGFloat heightVolleyball = self.volleyBall.size.height;
     CGFloat ballCourtSide = self.volleyBall.position.x;
     BOOL shouldHitBall = 1;
+    BOOL debugMode = [GameAndScoreDetails sharedGameDataStore].debug;
     
-    
-    if(self.hostValue ==0)  // IF PLAYER ONE
+    if(self.hostValue ==0 || (self.computerAI && !debugMode))  // IF PLAYER ONE
     {
         bool correctSideOfCourt = (self.frame.size.width/2 >= ballCourtSide);  //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].leftPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].leftPlayerHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
         shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
     } else if (self.hostValue == 1)  //IF PLAYER 2
     {
         bool correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits < self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
+        bool lessThanThreeHits = ([GameAndScoreDetails sharedGameDataStore].rightPlayerHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
         shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
     }
     
