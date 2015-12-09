@@ -115,7 +115,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.gravityValue =  -2.5; // v1.0 was -2.5;
     self.waitTime = 0.35;
     self.frameCounter = 0;
-    self.easeMultiplier = 2.0;
+    self.easeMultiplier = 1.5;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
     self.isMultiplayer = (self.hostValue == 0 || self.hostValue == 1);
