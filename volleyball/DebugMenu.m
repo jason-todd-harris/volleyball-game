@@ -19,7 +19,7 @@
 @property (nonatomic, strong) UILabel *developedByJasonHarris;
 
 //DEBUG ONES
-@property (nonatomic, strong) UITextField *xDebugValue;
+@property (nonatomic, strong) UITextField *debugEasiness;
 @property (nonatomic, strong) UITextField *yDebugValue;
 @property (nonatomic, strong) UITextField *debugGravity;
 @property (nonatomic, strong) UITextField *debugForce;
@@ -141,7 +141,7 @@
         transition.subtype = kCATransitionFromLeft;
         [self.view.window.layer addAnimation:transition forKey:nil];
         
-        [GameAndScoreDetails sharedGameDataStore].xComputerStrike = self.xDebugValue.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debugEasiness = self.debugEasiness.text.floatValue;
         [GameAndScoreDetails sharedGameDataStore].yComputerStrike = self.yDebugValue.text.floatValue;
         [GameAndScoreDetails sharedGameDataStore].debugGravity = self.debugGravity.text.floatValue;
         [GameAndScoreDetails sharedGameDataStore].debugForce = self.debugForce.text.floatValue;
@@ -189,8 +189,9 @@
     self.yDebugValue = [[UITextField alloc] init];
     self.yDebugValue.placeholder = @"y hit value";
     
-    self.xDebugValue = [[UITextField alloc] init];
-    self.xDebugValue.placeholder = @"x hit value";
+    self.debugEasiness = [[UITextField alloc] init];
+    self.debugEasiness.placeholder = @"debug easiness";
+    self.debugEasiness.text = @"2";
     
     self.debugForce = [[UITextField alloc] init];
     self.debugForce.placeholder = @"hit force";
@@ -213,7 +214,7 @@
     }];
     
     
-    NSArray *debugThingArray = @[self.debugWaitTime, self.yDebugValue,self.xDebugValue,self.debugForce,self.debugGravity];
+    NSArray *debugThingArray = @[self.debugWaitTime, self.yDebugValue,self.debugEasiness,self.debugForce,self.debugGravity];
     
     __block bool firstOne = YES;
     UITextField *previousThing;

@@ -58,6 +58,10 @@
 @property (nonatomic, strong) SKShapeNode *compTouchTwo;
 @property (nonatomic, strong) SKShapeNode *compTouchThree;
 
+//DIFFICULTY
+@property (nonatomic, assign) CGFloat missChance;
+@property (nonatomic, assign) CGFloat easeMultiplier;
+
 //SETTINGS
 @property (nonatomic, assign) CGFloat ballDepthInSand;
 @property (nonatomic, assign) CGFloat gravityValue;
@@ -107,8 +111,9 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.lastTapper = NO;
     self.strikingForce = 90; // v1.0 was 90;
     self.gravityValue =  -2.5; // v1.0 was -2.5;
-    self.waitTime = 0.33;
+    self.waitTime = 0.375;
     self.frameCounter = 0;
+    self.easeMultiplier = 2;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
     self.isMultiplayer = (self.hostValue == 0 || self.hostValue == 1);
@@ -170,18 +175,18 @@ static const uint32_t ceilingCategory = 1 << 5;
     __block CGFloat ballCourtSide = self.volleyBall.position.x;
     __block CGFloat ballHeight = self.volleyBall.position.y;
     __block bool correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-    __block bool ballOnTheScreen = (self.screenHeight >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
+    __block bool ballOnTheScreen = (self.screenHeight - self.volleyBall.size.height/2 >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
     __block bool lessThanThreeHits = (self.consecutiveAIHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
     __block bool shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
     
     if (shouldHitBall && lessThanThreeHits && self.computerToHit)
     {
-        __block CGFloat newWaitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(100)/100;
+        __block CGFloat newWaitTime = self.waitTime + 0.5 * self.waitTime * arc4random_uniform(50 + self.missChance)/50;
         dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime* NSEC_PER_SEC)), dispatch_get_main_queue(), ^{  //TIME TO WAIT FOR HIT
             ballCourtSide = self.volleyBall.position.x;
             ballHeight = self.volleyBall.position.y;
             correctSideOfCourt = (self.frame.size.width/2 <= ballCourtSide); //IS THE BALL ON THE CORRECT SIDE OF THE COURT
-            ballOnTheScreen = (self.screenHeight >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
+            ballOnTheScreen = (self.screenHeight - self.volleyBall.size.height/2 >= ballHeight); //THE BALL SHOULDN'T BE ABOVE THE SCREEN
             lessThanThreeHits = (self.consecutiveAIHits <= self.allowableHits); //HAVE THEY ALREADY HIT TOO MANY TIMES
             shouldHitBall = (correctSideOfCourt && lessThanThreeHits && ballOnTheScreen);
             if (shouldHitBall && self.computerToHit)
@@ -190,7 +195,7 @@ static const uint32_t ceilingCategory = 1 << 5;
                 self.physicsWorld.gravity = CGVectorMake(0.0, self.gravityValue);
                 [self computerHitBall:ballHit];
                 self.computerToHit = NO;
-                newWaitTime = 2 * self.waitTime * arc4random_uniform(100)/100;
+                newWaitTime = self.easeMultiplier * self.waitTime * arc4random_uniform(50 + self.missChance)/50;
                 dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(newWaitTime * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{ //TIME TO WAIT FOR SECOND HIT
                     self.computerToHit = YES;
                 });
@@ -224,12 +229,13 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         if(ballLocation.x <= physicsWidthHalf*1.5)
         {
-            if(arc4random_uniform(100)<50)
+            if(arc4random_uniform(100) < 15 * self.easeMultiplier + self.missChance) //AS MISS CHANCE GOES UP SPIKE IS LESS LIKELY
             {
                 yLocale = -1.0*arc4random_uniform(100)/100;
             } else
             {
-                forceHit = self.strikingForce*2.5;
+                forceHit = self.strikingForce + self.strikingForce * arc4random_uniform(200)/100 ;
+                self.missChance += self.missChance * 0.25;
                 NSLog(@"SLAMMED!");
             }
         }
@@ -248,42 +254,47 @@ static const uint32_t ceilingCategory = 1 << 5;
         
     }
     
-    //WITH DEBUG ON
-    if([GameAndScoreDetails sharedGameDataStore].debug)
-    {
-        if ([GameAndScoreDetails sharedGameDataStore].yComputerStrike!= 0)
-        {
-            yLocale = [GameAndScoreDetails sharedGameDataStore].yComputerStrike;
-        }
-        if([GameAndScoreDetails sharedGameDataStore].xComputerStrike != 0)
-        {
-            xLocale = [GameAndScoreDetails sharedGameDataStore].xComputerStrike;
-        }
-    }
-    CGFloat angle = -atan(1/yLocale/xLocale)*180/M_PI;
-    NSLog(@"multiple %1.2f   angle: %1.0f",yLocale/xLocale,angle);
+    
+//    CGFloat angle = -atan(1/yLocale/xLocale)*180/M_PI;
+//    NSLog(@"multiple %1.2f   angle: %1.0f",yLocale/xLocale,angle);
     
     CGPoint touchLocation = pointAI(ballLocation, xLocale,yLocale); // WILL PUT STUFF HERE
-    
     
     CGPoint pointForRatio = pointSubtract(touchLocation, ballLocation);
     CGFloat xBallVector = forceHit * (pointForRatio.x / -ABS(pointForRatio.y));
     xBallVector = constrainFloat(-forceHit, forceHit, xBallVector);
     CGFloat yBallVector = forceHit * (pointForRatio.y / -ABS(pointForRatio.x));
-    yBallVector = constrainFloat(-0.75*forceHit, forceHit, yBallVector);
+    yBallVector = constrainFloat(-0.80*forceHit, forceHit, yBallVector);
     
-    self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);  // REMOVE COMMENT AFTER DEBUG
-    [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)]; // REMOVE COMMENT AFTER DEBUG
-    [self addComputerTouchPoints:ballLocation];
     
-    if([GameAndScoreDetails sharedGameDataStore].debug)
+    //DOES THE SHOT MISS
+    NSUInteger randomThing = arc4random_uniform(100/self.easeMultiplier);
+    NSLog(@"miss chance: %1.0f  random: %lu",self.missChance,(unsigned long)randomThing);
+    if(self.missChance > randomThing)
     {
-        [self drawDebugVectorBallLocation:ballLocation touchLocation:touchLocation];
+        NSLog(@"MISS!!");
+        self.missChance = self.missChance/3*2;
+        if(self.missChance <randomThing)
+        {
+            self.consecutiveAIHits ++;
+            NSLog(@"DOUBLE MISS");
+        }
+        
+    } else
+    {
+        self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);
+        [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];
+        [self addComputerTouchPoints:pointForLine(ballLocation, touchLocation, 20)];
+        
+        if([GameAndScoreDetails sharedGameDataStore].debug)
+        {
+            [self drawDebugVectorBallLocation:ballLocation touchLocation:touchLocation];
+        }
+        
+        self.consecutiveAIHits ++;
+        self.localGameStore.leftPlayerHits = 0;
+        self.missChance += self.easeMultiplier;
     }
-    
-    self.consecutiveAIHits ++;
-    self.localGameStore.leftPlayerHits = 0;
-    
 }
 
 
@@ -372,6 +383,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     {
         [self setUpDebugNodes];
         self.heightWidthLabel.text = [NSString stringWithFormat:@"width: %.0f height: %.0f", self.screenWidth , self.screenHeight];
+        self.easeMultiplier = [GameAndScoreDetails sharedGameDataStore].debugEasiness;
     }
     
     //EXIT GAME BUTTON
@@ -380,6 +392,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.allowBallHit = NO;
     self.consecutiveAIHits = 3;
     self.computerToHit = YES;
+    self.missChance = 0;
     
     
 }
@@ -392,7 +405,7 @@ static const uint32_t ceilingCategory = 1 << 5;
     //the touch point
     self.showsTouchPoint = [[SKShapeNode alloc] init];
     CGMutablePathRef ballPath = CGPathCreateMutable();
-    CGPathAddArc(ballPath, NULL, 0,0, self.screenHeight / 40, 0, M_PI*2, YES);
+    CGPathAddArc(ballPath, NULL, 0,0, self.screenHeight / 35, 0, M_PI*2, YES);
     self.showsTouchPoint.path = ballPath;
     self.showsTouchPoint.lineWidth = 1.0;
     self.showsTouchPoint.fillColor = [SKColor blueColor];
@@ -769,7 +782,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         shouldHitBall = (correctSideOfCourt && lessThanThreeHits);
     }
     
-    bool closeToTheBall = (ABS(xDistance) < heightVolleyball*2.0) && (ABS(yDistance) < heightVolleyball*2.0);
+    bool closeToTheBall = (ABS(xDistance) < heightVolleyball*3.0) && (ABS(yDistance) < heightVolleyball*3.0);
     
     
     if (closeToTheBall && shouldHitBall)
@@ -847,7 +860,7 @@ static const uint32_t ceilingCategory = 1 << 5;
             [[GameAndScoreDetails sharedGameDataStore] rightPlayerScored];
             [self placeRestartGameButton];
         }
-        NSLog(@"Left side Hit");
+//        NSLog(@"Left side Hit");
         self.gameStopped = YES;
         
     } else if (rightSideFall)
@@ -858,12 +871,12 @@ static const uint32_t ceilingCategory = 1 << 5;
             [[GameAndScoreDetails sharedGameDataStore] leftPlayerScored];
             [self placeRestartGameButton]; //REMOVE COMMENTING AFTER DEBUGGIN
         }
-        NSLog(@"Right side Hit");
+//        NSLog(@"Right side Hit");
         self.gameStopped = YES; //REMOVE COMMENTING AFTER DEBUGGIN
     } else if (netHit)
     {
         [self flashBackgroundScreen:[SKColor grayColor]];
-        NSLog(@"Net was hit");
+//        NSLog(@"Net was hit");
     }
     [self updateScoreLabelNode];
     
