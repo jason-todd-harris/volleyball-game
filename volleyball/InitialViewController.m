@@ -20,14 +20,17 @@
 @property (weak, nonatomic) IBOutlet UISegmentedControl *hostSwitch;
 @property (nonatomic, assign) CGFloat screenWidth;
 @property (nonatomic, assign) CGFloat screenHeight;
+
 @property (strong, nonatomic) UILabel *beachVolleyballLabel;
 @property (nonatomic, strong) UIButton *singlePlayerButton;
 @property (nonatomic, strong) UIButton *multiplayerButton;
 @property (nonatomic, strong) UIButton *settingsButton;
 @property (nonatomic, strong) UIButton *computerButton;
+@property (nonatomic, strong) UIButton *aiOpponantButton;
 
 @property (nonatomic, strong) UIImage *sliderOff;
 @property (nonatomic, strong) UIImage *sliderOn;
+
 
 @property (nonatomic, strong) UILabel *developedByJasonHarris;
 
@@ -57,11 +60,7 @@
     [self addDevelopedByJasonHarris];
     
     
-    [GameAndScoreDetails sharedGameDataStore].debug = YES;
-    if ([GameAndScoreDetails sharedGameDataStore].debug)
-    {
-        [self debugStuff];
-    }
+    [self debugStuff];
 }
 
 
@@ -114,6 +113,7 @@
     CGFloat sizeRatio = singlePlayerImage.size.height / self.screenHeight * 4;
     
     singlePlayerImage = [UIImage imageWithCGImage:singlePlayerImage.CGImage scale:sizeRatio orientation:singlePlayerImage.imageOrientation];
+    CGFloat imageSize = singlePlayerImage.size.width;
     self.singlePlayerButton = [[UIButton alloc] init];
     self.singlePlayerButton.accessibilityLabel = @"singlePlayer";
     [self.singlePlayerButton setImage:singlePlayerImage forState:UIControlStateNormal];
@@ -121,7 +121,25 @@
     [self.view addSubview:self.singlePlayerButton];
     
     [self.singlePlayerButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.view).offset(-buttonIndent);
+        make.left.equalTo(self.view).offset(self.screenWidth*0.2 - imageSize/2);
+        make.centerY.equalTo(self.view).offset(buttonOffsetDown);
+    }];
+    
+    
+    //COMPUTER OPPONENT
+    UIImage *computerImage = [UIImage imageNamed:@"beachvolleyball-shakePhone"];
+    computerImage = [UIImage imageWithCGImage:computerImage.CGImage
+                                        scale:computerImage.size.height / self.screenHeight * 4
+                                  orientation:computerImage.imageOrientation];
+    
+    self.aiOpponantButton = [[UIButton alloc] init];
+    self.aiOpponantButton.accessibilityLabel = @"computerOpponant";
+    [self.aiOpponantButton setImage:computerImage forState:UIControlStateNormal];
+    
+    [self.view addSubview:self.aiOpponantButton];
+    
+    [self.aiOpponantButton mas_makeConstraints:^(MASConstraintMaker *make) {
+        make.left.equalTo(self.view).offset(self.screenWidth*0.4 - imageSize/2);
         make.centerY.equalTo(self.view).offset(buttonOffsetDown);
     }];
     
@@ -136,7 +154,7 @@
     [self.view addSubview:self.multiplayerButton];
 
     [self.multiplayerButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.view);
+        make.left.equalTo(self.view).offset(self.screenWidth*0.6 - imageSize/2);
         make.centerY.equalTo(self.view).offset(buttonOffsetDown);
     }];
     
@@ -150,7 +168,7 @@
     [self.view addSubview:self.settingsButton];
     
     [self.settingsButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.view).offset(buttonIndent);
+        make.left.equalTo(self.view).offset(self.screenWidth*0.8 - imageSize/2);
         make.centerY.equalTo(self.view).offset(buttonOffsetDown);
     }];
     
@@ -162,14 +180,15 @@
     self.sliderOn = [UIImage imageNamed:@"beachvolleyball-sliderOn"];
     self.sliderOn = [UIImage imageWithCGImage:self.sliderOn.CGImage scale:sizeRatio/0.75 orientation:self.sliderOff.imageOrientation];
     self.computerButton = [[UIButton alloc] init];
-    self.computerButton.accessibilityLabel = @"noComputer";
-    [self.computerButton setImage:self.sliderOff forState:UIControlStateNormal];
+    self.computerButton.accessibilityLabel = @"easyMode";
+    [self.computerButton setImage:self.sliderOn forState:UIControlStateNormal];
+    
     
     [self.view addSubview:self.computerButton];
     
     [self.computerButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerX.equalTo(self.singlePlayerButton);
-        make.centerY.equalTo(self.singlePlayerButton).offset(singlePlayerImage.size.height * 0.75);
+        make.centerX.equalTo(self.aiOpponantButton);
+        make.centerY.equalTo(self.aiOpponantButton).offset(singlePlayerImage.size.height * 0.75);
     }];
     
     //LABEL - VS COMPUTER OPPONET
@@ -189,7 +208,7 @@
     
     
     
-    NSArray *buttonArray = @[self.singlePlayerButton, self.multiplayerButton, self.settingsButton, self.computerButton];
+    NSArray *buttonArray = @[self.singlePlayerButton, self.multiplayerButton, self.settingsButton, self.computerButton,self.aiOpponantButton];
     for (UIButton *button in buttonArray) {
         [button addTarget:self
                    action:@selector(buttonClicked:)
@@ -204,13 +223,7 @@
     UIStoryboard *sb = [UIStoryboard storyboardWithName:@"Main" bundle:nil];
     if([sendingButton isEqual:self.singlePlayerButton])
     {
-        [GameAndScoreDetails sharedGameDataStore].debugEasiness = self.debugEasiness.text.floatValue;
-        [GameAndScoreDetails sharedGameDataStore].yComputerStrike = self.yDebugValue.text.floatValue;
-        [GameAndScoreDetails sharedGameDataStore].debugGravity = self.debugGravity.text.floatValue;
-        [GameAndScoreDetails sharedGameDataStore].debugForce = self.debugForce.text.floatValue;
-        [GameAndScoreDetails sharedGameDataStore].debugWaitTime = self.debugWaitTime.text.floatValue;
-        [GameAndScoreDetails sharedGameDataStore].debug = self.debugModeSwitch.isOn;
-        
+        [GameAndScoreDetails sharedGameDataStore].computerPlayer = NO;
         GameViewController *newGame = [sb instantiateViewControllerWithIdentifier:@"GameViewController"];
         [self presentViewController:newGame animated:YES completion:^{
             //completion
@@ -220,6 +233,9 @@
     {
         [[GameAndScoreDetails sharedGameDataStore] resetGame];
         [GameAndScoreDetails sharedGameDataStore].host = self.hostSwitch.selectedSegmentIndex;
+        [GameAndScoreDetails sharedGameDataStore].debug = 0;
+        [GameAndScoreDetails sharedGameDataStore].computerPlayer = NO;
+        self.debugModeSwitch.on = NO;
         
         MultiplayerViewController *newMultiGame = [sb instantiateViewControllerWithIdentifier:@"MultiplayerViewController"];
         [self presentViewController:newMultiGame animated:YES completion:^{
@@ -242,18 +258,28 @@
         }];
     } else if ([sendingButton isEqual:self.computerButton])
     {
-        if ([self.computerButton.accessibilityLabel isEqualToString:@"noComputer"])
+        if ([self.computerButton.accessibilityLabel isEqualToString:@"easyMode"])
         {
-            self.computerButton.accessibilityLabel = @"yesComputer";
-            [self.computerButton setImage:self.sliderOn forState:UIControlStateNormal];
-            [GameAndScoreDetails sharedGameDataStore].computerPlayer = YES;
+            self.computerButton.accessibilityLabel = @"hardMode";
+            [self.computerButton setImage:self.sliderOff forState:UIControlStateNormal];
         } else
         {
-            self.computerButton.accessibilityLabel = @"noComputer";
-            [self.computerButton setImage:self.sliderOff forState:UIControlStateNormal];
-            [GameAndScoreDetails sharedGameDataStore].computerPlayer = NO;
+            self.computerButton.accessibilityLabel = @"easyMode";
+            [self.computerButton setImage:self.sliderOn forState:UIControlStateNormal];
         }
-        
+    } else if([sendingButton isEqual:self.aiOpponantButton])
+    {
+        [GameAndScoreDetails sharedGameDataStore].debugEasiness = self.debugEasiness.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].yComputerStrike = self.yDebugValue.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debugGravity = self.debugGravity.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debugForce = self.debugForce.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debugWaitTime = self.debugWaitTime.text.floatValue;
+        [GameAndScoreDetails sharedGameDataStore].debug = self.debugModeSwitch.isOn;
+        [GameAndScoreDetails sharedGameDataStore].computerPlayer = YES;
+        GameViewController *newGame = [sb instantiateViewControllerWithIdentifier:@"GameViewController"];
+        [self presentViewController:newGame animated:YES completion:^{
+            //completion
+        }];
     }
     
 }

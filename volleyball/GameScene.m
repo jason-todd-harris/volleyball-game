@@ -309,8 +309,8 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         
 //        //ACTUAL GAME
-//        self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);  //COMMENT TO DEBUG VECTORS
-//        [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];  //COMMENT TO DEBUG VECTORS
+        self.volleyBall.physicsBody.velocity = CGVectorMake(0,0);  //COMMENT TO DEBUG VECTORS
+        [self.volleyBall.physicsBody applyImpulse:CGVectorMake(xBallVector,yBallVector)];  //COMMENT TO DEBUG VECTORS
         [self addComputerTouchPoints:pointForLine(ballLocation, touchLocation, 20)];
         
         if([GameAndScoreDetails sharedGameDataStore].debug)
@@ -753,8 +753,6 @@ static const uint32_t ceilingCategory = 1 << 5;
     endArrow.position = ballLocation;
     endArrow.zPosition = 500;
     [self addChild:endArrow];
-    
-    
 }
 
 #pragma mark - Touch and Hitting

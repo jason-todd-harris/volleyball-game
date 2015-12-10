@@ -56,28 +56,29 @@
         make.left.equalTo(self.view).offset(15);
         make.bottomMargin.equalTo(self.view).offset(-15);
     }];
+
+    //DEBUG MENU IN SETTINGS
+//    UIImage *settingsImage = [UIImage imageNamed:@"beachvolleyball-settingsButton"];
+//    sizeRatio = settingsImage.size.height / self.screenHeight * 8;
+//    settingsImage = [UIImage imageWithCGImage:settingsImage.CGImage
+//                                        scale:sizeRatio
+//                                  orientation:settingsImage.imageOrientation];
+//    
+//    self.settingsButton = [[UIButton alloc] init];
+//    self.settingsButton.accessibilityLabel = @"settings";
+//    [self.settingsButton setImage:settingsImage forState:UIControlStateNormal];
+//    
+//    [self.view addSubview:self.settingsButton];
+//    
+//    [self.settingsButton mas_makeConstraints:^(MASConstraintMaker *make) {
+//        make.centerY.equalTo(self.backButton);
+//        make.left.equalTo(self.backButton.mas_right).offset(10);
+//    }];
     
-    UIImage *settingsImage = [UIImage imageNamed:@"beachvolleyball-settingsButton"];
-    sizeRatio = settingsImage.size.height / self.screenHeight * 8;
-    settingsImage = [UIImage imageWithCGImage:settingsImage.CGImage
-                                        scale:sizeRatio
-                                  orientation:settingsImage.imageOrientation];
-    
-    self.settingsButton = [[UIButton alloc] init];
-    self.settingsButton.accessibilityLabel = @"settings";
-    [self.settingsButton setImage:settingsImage forState:UIControlStateNormal];
-    
-    [self.view addSubview:self.settingsButton];
-    
-    [self.settingsButton mas_makeConstraints:^(MASConstraintMaker *make) {
-        make.centerY.equalTo(self.backButton);
-        make.left.equalTo(self.backButton.mas_right).offset(10);
-    }];
     
     
     
-    
-    NSArray *buttonArray = @[self.backButton, self.settingsButton];
+    NSArray *buttonArray = @[self.backButton];
     for (UIButton *button in buttonArray) {
         [button addTarget:self
                    action:@selector(buttonClicked:)
@@ -131,7 +132,7 @@
 {
     
     self.settingsText = [[UILabel alloc] init];
-    self.settingsText.text = @"In order to hit the ball, tap the side opposite of where you want the ball to travel, do not swipe. If you want to hit up, tap below the ball, if you want to hit right, tap left of the ball. \n \n Multiplayer will work with both Bluetooth and WiFi. For best performance please turn off Bluetooth and use only WiFi. The phones will connect if they are both have Wifi on or are on the same WiFi network. \n \n This app was created by Jason Harris.  Please email me any comments or suggestions at jason.harris.coding@gmail.com. \n \n Thank you to all friends and family who supported me and allowed me to bounce ideas off them.";
+    self.settingsText.text = @"In order to hit the ball, tap the side opposite of where you want the ball to travel, do not swipe. If you want to hit up, tap below the ball, if you want to hit right, tap left of the ball. \n \n Multiplayer will work with both Bluetooth and WiFi. For best performance please turn off Bluetooth and use only WiFi. The phones will connect if they are both have Wifi on or are on the same WiFi network. Both apps must be the same version.\n \n This app was created by Jason Harris.  Please email me any comments or suggestions at jason.harris.coding@gmail.com. \n \n Thank you to all friends and family who supported me and allowed me to bounce ideas off them.";
     self.settingsText.textColor = [UIColor whiteColor];
     self.settingsText.font = [UIFont fontWithName:@"Arial Hebrew" size:self.screenHeight / 23];
     self.settingsText.lineBreakMode = NSLineBreakByWordWrapping;
