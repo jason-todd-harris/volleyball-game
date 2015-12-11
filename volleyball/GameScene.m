@@ -15,6 +15,7 @@
 @property (nonatomic, strong) SKShapeNode *showsTouchPoint;
 @property (nonatomic, strong) SKSpriteNode *volleyBall;
 @property (nonatomic, strong) SKShapeNode *fenceShapeNode;
+@property (nonatomic, strong) SKShapeNode *zeroPlayerNode;
 @property (nonatomic, strong) SKNode *groundNodeLeft;
 @property (nonatomic, strong) SKNode *groundNodeRight;
 @property (nonatomic, strong) SKNode *wallNodeOne;
@@ -113,9 +114,19 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.lastTapper = NO;
     self.strikingForce = 90; // v1.0 was 90;
     self.gravityValue =  -2.5; // v1.0 was -2.5;
-    self.waitTime = 0.35;
+    
+    if ([GameAndScoreDetails sharedGameDataStore].isHardMode)
+    {
+        self.easeMultiplier = 1;
+        self.waitTime = 0.4;
+    } else
+    {
+        self.easeMultiplier = 2;
+        self.waitTime = 0.4;
+    }
+    
+    
     self.frameCounter = 0;
-    self.easeMultiplier = 1.5;
     self.hostValue = [GameAndScoreDetails sharedGameDataStore].host;
     self.localGameStore = [GameAndScoreDetails sharedGameDataStore];
     self.isMultiplayer = (self.hostValue == 0 || self.hostValue == 1);
@@ -242,9 +253,9 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         if(ballLocation.x <= physicsWidthHalf*1.5)
         {
-            CGFloat chanceOfSlam =  25 / self.easeMultiplier + self.missChance * 3 / self.easeMultiplier;
+            CGFloat chanceOfSlam =  25 / self.easeMultiplier + self.missChance * 2 / self.easeMultiplier;
             NSLog(@"miss: %1.1f%% and slam: %1.0f%%",self.missChance, chanceOfSlam);
-            if(arc4random_uniform(100) < 10 / self.easeMultiplier + self.missChance * 3 / self.easeMultiplier) //CHANCE OF SLAMMING BALL
+            if(arc4random_uniform(100) < 20 / self.easeMultiplier + self.missChance * 3 / self.easeMultiplier) //CHANCE OF SLAMMING BALL
             {
                 forceHit = self.strikingForce + 2 * self.strikingForce * arc4random_uniform(100)/100 /self.easeMultiplier ;
                 NSLog(@"SLAMMED!");
@@ -299,7 +310,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         //BALL SLAMMED
         if(forceHit > self.strikingForce)
         {
-            self.missChance = self.missChance / 3 * self.easeMultiplier;
+            self.missChance = self.missChance / self.easeMultiplier;
         }
 
         
@@ -320,7 +331,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         self.consecutiveAIHits ++;
         self.localGameStore.leftPlayerHits = 0;
-        self.missChance += self.easeMultiplier/1.75;
+        self.missChance += self.easeMultiplier/2;
     }
 }
 
@@ -503,6 +514,23 @@ static const uint32_t ceilingCategory = 1 << 5;
     self.fenceShapeNode.physicsBody.allowsRotation = NO;
     self.fenceShapeNode.zPosition = 5;
     [self addChild:self.fenceShapeNode];
+    
+    
+//    fenceSize = CGSizeMake(10, self.screenHeight/self.fenceSizeRatio*2);
+//    self.zeroPlayerNode = [SKShapeNode shapeNodeWithRectOfSize:fenceSize cornerRadius:7];
+//    self.zeroPlayerNode.fillColor = [SKColor whiteColor];
+//    self.zeroPlayerNode.position = CGPointMake(self.screenWidth / 2.5, self.screenHeight / 2.0);
+//    smallerRectangle = CGSizeMake(fenceSize.width-3, fenceSize.height);
+//    self.zeroPlayerNode.physicsBody = [SKPhysicsBody bodyWithRectangleOfSize:smallerRectangle];
+//    self.zeroPlayerNode.physicsBody.categoryBitMask = fenceCategory;
+//    self.zeroPlayerNode.physicsBody.contactTestBitMask = ballCategory;
+//    self.zeroPlayerNode.physicsBody.dynamic = YES;
+//    self.zeroPlayerNode.physicsBody.pinned = YES;
+//    self.zeroPlayerNode.physicsBody.allowsRotation = NO;
+//    self.zeroPlayerNode.zPosition = 5;
+//    [self addChild:self.zeroPlayerNode];
+    
+    
 }
 
 
@@ -886,6 +914,11 @@ static const uint32_t ceilingCategory = 1 << 5;
     bool leftSideFall = (contact.bodyA.categoryBitMask == floorCategoryLeft || contact.bodyB.categoryBitMask == floorCategoryLeft);
     bool rightSideFall = (contact.bodyA.categoryBitMask == floorCategoryRight || contact.bodyB.categoryBitMask == floorCategoryRight);
     bool netHit = (contact.bodyA.categoryBitMask == fenceCategory || contact.bodyB.categoryBitMask == fenceCategory);
+    
+//    if(contact.bodyA.pinned || contact.bodyB.pinned) // ZERO STUFF
+//    {
+//        self.consecutiveAIHits = 1; //ZERO STUFF
+//    }
     
     if(leftSideFall || rightSideFall)
     {

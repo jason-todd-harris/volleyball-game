@@ -22,6 +22,7 @@
 @property (nonatomic, assign) CGFloat screenHeight;
 
 @property (strong, nonatomic) UILabel *beachVolleyballLabel;
+@property (nonatomic, strong) UILabel *computerDifficulty;
 @property (nonatomic, strong) UIButton *singlePlayerButton;
 @property (nonatomic, strong) UIButton *multiplayerButton;
 @property (nonatomic, strong) UIButton *settingsButton;
@@ -59,8 +60,7 @@
     [self addButtons];
     [self addDevelopedByJasonHarris];
     
-    
-    [self debugStuff];
+//    [self debugStuff];
 }
 
 
@@ -192,14 +192,14 @@
     }];
     
     //LABEL - VS COMPUTER OPPONET
-    UILabel *computerOpponent = [[UILabel alloc] init];
-    computerOpponent.text = @"vs computer";
-    computerOpponent.textColor = [UIColor whiteColor];
-    computerOpponent.alpha = 0.95;
-    computerOpponent.font = [UIFont fontWithName:@"SpinCycleOT" size:self.screenHeight / 15];
-    [self.view addSubview:computerOpponent];
+    self.computerDifficulty = [[UILabel alloc] init];
+    self.computerDifficulty.text = @"easy";
+    self.computerDifficulty.textColor = [UIColor whiteColor];
+    self.computerDifficulty.alpha = 0.95;
+    self.computerDifficulty.font = [UIFont fontWithName:@"SpinCycleOT" size:self.screenHeight / 15];
+    [self.view addSubview:self.computerDifficulty];
     
-    [computerOpponent mas_makeConstraints:^(MASConstraintMaker *make) {
+    [self.computerDifficulty mas_makeConstraints:^(MASConstraintMaker *make) {
         make.centerX.equalTo(self.computerButton);
         make.top.equalTo(self.computerButton.mas_bottom).offset(10);
     }];
@@ -258,13 +258,15 @@
         }];
     } else if ([sendingButton isEqual:self.computerButton])
     {
-        if ([self.computerButton.accessibilityLabel isEqualToString:@"easyMode"])
+        if ([self.computerDifficulty.text isEqualToString:@"easy"])
         {
-            self.computerButton.accessibilityLabel = @"hardMode";
+            self.computerDifficulty.text = @"hard";
             [self.computerButton setImage:self.sliderOff forState:UIControlStateNormal];
+            [GameAndScoreDetails sharedGameDataStore].isHardMode = YES;
         } else
         {
-            self.computerButton.accessibilityLabel = @"easyMode";
+            [GameAndScoreDetails sharedGameDataStore].isHardMode = NO;
+            self.computerDifficulty.text = @"easy";
             [self.computerButton setImage:self.sliderOn forState:UIControlStateNormal];
         }
     } else if([sendingButton isEqual:self.aiOpponantButton])

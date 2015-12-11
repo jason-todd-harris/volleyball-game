@@ -29,6 +29,7 @@ typedef NS_ENUM (NSUInteger, ballServer) {
 
 @property (nonatomic, assign) bool computerPlayer;
 @property (nonatomic, assign) bool debug;
+@property (nonatomic, assign) bool isHardMode;
 @property (nonatomic, assign) CGFloat yComputerStrike;
 @property (nonatomic, assign) CGFloat debugEasiness;
 @property (nonatomic, assign) CGFloat debugGravity;
