@@ -110,8 +110,7 @@
  Call this method to join the party. It will automatically start searching for peers.
  
  When you sucessfully connect to another peer, you will receive a delegate callback to:
- 
-    - (void)partyTime:(PLPartyTime *)partyTime peer:(MCPeerID *)peer changedState:(MCSessionState)state currentPeers:(NSArray *)currentPeers;
+ d    - (void)partyTime:(PLPartyTime *)partyTime peer:(MCPeerID *)peer changedState:(MCSessionState)state currentPeers:(NSArray *)currentPeers;
  */
 - (void)joinParty;
 

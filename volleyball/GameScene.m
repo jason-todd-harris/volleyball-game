@@ -121,7 +121,7 @@ static const uint32_t ceilingCategory = 1 << 5;
         self.waitTime = 0.4;
     } else
     {
-        self.easeMultiplier = 2;
+        self.easeMultiplier = 2.4;
         self.waitTime = 0.4;
     }
     
@@ -253,9 +253,9 @@ static const uint32_t ceilingCategory = 1 << 5;
         
         if(ballLocation.x <= physicsWidthHalf*1.5)
         {
-            CGFloat chanceOfSlam =  25 / self.easeMultiplier + self.missChance * 2 / self.easeMultiplier;
+            CGFloat chanceOfSlam =  20 / self.easeMultiplier + self.missChance * 3 / self.easeMultiplier;
             NSLog(@"miss: %1.1f%% and slam: %1.0f%%",self.missChance, chanceOfSlam);
-            if(arc4random_uniform(100) < 20 / self.easeMultiplier + self.missChance * 3 / self.easeMultiplier) //CHANCE OF SLAMMING BALL
+            if(arc4random_uniform(100) < chanceOfSlam) //CHANCE OF SLAMMING BALL
             {
                 forceHit = self.strikingForce + 2 * self.strikingForce * arc4random_uniform(100)/100 /self.easeMultiplier ;
                 NSLog(@"SLAMMED!");
@@ -573,6 +573,7 @@ static const uint32_t ceilingCategory = 1 << 5;
 {
     SKTexture *groundTexture = [SKTexture textureWithImageNamed:@"background-slice_small_ocean&sand"];
     CGFloat heightRatio = self.size.height / groundTexture.size.height;
+    NSLog(@"%1.1f",groundTexture.size.height);
     CGFloat resultantHeight = 0;
     for(NSUInteger i = 0 ; i < 2 + self.screenWidth / groundTexture.size.width / heightRatio; i++)
     {
@@ -691,6 +692,10 @@ static const uint32_t ceilingCategory = 1 << 5;
             self.whoShouldTap = @"PLAYER 1 - ";
         }
         
+        if(self.computerAI)
+        {
+            self.whoShouldTap = @"";
+        }
         
         
         self.restartButton = [SKLabelNode labelNodeWithFontNamed:@"SpinCycleOT"];
@@ -709,6 +714,8 @@ static const uint32_t ceilingCategory = 1 << 5;
             }
             
         });
+        NSDictionary *it;
+        [it isEqualToDictionary:it];
         [self addChild:self.restartButton];
     });
 }

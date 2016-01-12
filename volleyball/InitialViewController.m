@@ -363,10 +363,10 @@
         [textField mas_makeConstraints:^(MASConstraintMaker *make) {
             make.height.equalTo(@(fontSizeThing*1.25));
             make.width.equalTo(@90);
-            make.right.equalTo(self.singlePlayerButton.mas_left);
+            make.right.equalTo(self.computerButton.mas_left);
             if(firstOne)
             {
-                make.bottom.equalTo(self.singlePlayerButton.mas_bottom).offset(-5);
+                make.bottom.equalTo(self.computerButton.mas_bottom).offset(-5);
                 firstOne = NO;
             } else
             {
